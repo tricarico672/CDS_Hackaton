@@ -1,0 +1,26 @@
+# Ignore hidden files
+.env
+.git
+.idea
+.pycache
+*.pyc
+__pycache__/
+_build
+venv
+.venv
+
+# Operating system files
+.DS_Store
+Thumbs.db
+
+# IDE-specific files
+.sublime-workspace
+.vscode
+
+# Logs, SQLite databases and other output files
+logs/
+db.sqlite3
+*.log
+*.sqlite*
+*.db*
+*.pytest_cache
