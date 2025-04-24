@@ -18,5 +18,11 @@ cleaned_additional = clean_df(additional_obs)
 
 final_df = merge_df(df, additional_obs)
 
-print(prepare_csv(final_df).head())
+final_csv = prepare_csv(final_df)
+
+question = input('generate cleaned csv? [Y/n]: ')
+
+if question.lower == 'y':
+    final_csv.to_csv('../generated_data/cleaned/final_complete.csv')
+
 
