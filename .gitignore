@@ -25,3 +25,4 @@ db.sqlite3
 *.db*
 *.pytest_cache
 .Rproj.user
+.Rhistory
