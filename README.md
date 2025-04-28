@@ -1,6 +1,6 @@
-# Info
+# General Information
 
-This is the repository for the Cognitive Data Science Hackaton. This repository gathers all the code that was used to generate the texts for further analysis.
+This is the repository for the Cognitive Data Science Hackaton. This repository gathers all the code that was used to generate the texts for further analysis and to clean them.
 
 # Prompts
 
@@ -17,3 +17,4 @@ As an actor would do, impersonate a 25-year-old boy doing a monologue to himself
 # Temperature
 
 The experiment was run using three different temperature levels: 0.1, 0.7, and 1.3 to allow for more variation and randomness in the LLM's responses.
+
