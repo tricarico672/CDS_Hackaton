@@ -12,7 +12,7 @@ def chat_with_mistral(prompt, temperature):
             "prompt": prompt,
             "stream": False,
             'temperature' : temperature,
-            'max_tokens' : 100
+            # 'max_tokens' : 100
         }
     )
     return response.json()["response"]
@@ -39,7 +39,7 @@ def generate_data(temperature = 1.3, n = 30):
             except Exception as e:
                 print("Error:", str(e))
 
-def get_df(data = datas, output_dir: str = "generated_data/data_chat_local_complete.csv"):
+def get_df(data = datas, output_dir: str = "../generated_data/data_chat_local_complete.csv"):
     dataspd = pd.DataFrame(data)
     dataspd.to_csv(output_dir)
 

@@ -1,0 +1,4 @@
+Dataset,Split,Setup,"Ex. annotated",Category,Count,"Avg. per ex.",Prevalence
+input,test,output,590,semantic,5,0.008,0.007
+input,test,output,590,logical,1,0.002,0.002
+input,test,output,590,grammatical,5,0.008,0.008
