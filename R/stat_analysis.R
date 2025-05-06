@@ -1,5 +1,5 @@
 library(pacman)
-p_load(tidyverse, ggplot2, readr, janitor, psych, ggthemes, car)
+p_load(tidyverse, ggplot2, readr, janitor, psych, ggthemes, car, stringr ,rstatix, patchwork, gridExtra)
 
 theme_set(theme_clean())
 
@@ -19,7 +19,7 @@ emotions <- emotions %>%
 
 # see class imbalances, unfortunately many datapoints having 1.3 
 emotions %>% 
-  group_by(temperature) %>% 
+  group_by(temperature, type_of_prompt) %>% 
   summarize(n())
 # get the list of emotions in the dataframe
 list_emotions <- names(emotions)[5:length(emotions)-1]
@@ -29,62 +29,66 @@ describeBy(emotions ~ condition)
 # check summary statistics by temperature to see if more dispersion in higher temperatures
 describeBy(emotions ~ temperature)
 
+# check summary statistics by type of prompt to see if more dispersion in higher temperatures
+describeBy(emotions ~ type_of_prompt)
+# very balanced with respect to type of prompt (almost a perfect 50/50 split)
+
 emotions %>% 
   group_by(condition) %>% 
   summarize(mean_anger = mean(anger),
             mean_sadness = mean(sadness))
 
-ggplot(emotions, aes(x = anger)) +
-  geom_histogram(stat = 'density') +
-  facet_wrap(~condition) +
-  labs(title = 'Anger') +
-  theme(plot.title = element_text(hjust = .5))
-
-ggplot(emotions, aes(x = joy, group = condition)) +
-  geom_histogram(stat = 'density') +
-  facet_wrap(~condition)
-
-ggplot(emotions, aes(x = trust, group = condition)) +
-  geom_histogram(stat = 'density') +
-  facet_wrap(~condition)
-
-ggplot(emotions, aes(x = surprise, group = condition)) +
-  geom_histogram(stat = 'density') +
-  facet_wrap(~condition)
-
-ggplot(emotions, aes(x = disgust, group = condition)) +
-  geom_histogram(stat = 'density') +
-  facet_wrap(~condition)
-
-ggplot(emotions, aes(x = sadness, group = condition)) +
-  geom_histogram(stat = 'density') +
-  facet_wrap(~condition)
-
-ggplot(emotions, aes(x = fear, group = condition)) +
-  geom_histogram(stat = 'density') +
-  facet_wrap(~condition)  
-
-ggplot(emotions, aes(x = anticipation, group = condition)) +
-  geom_histogram(stat = 'density') +
-  facet_wrap(~condition)
-
-ggplot(emotions, aes(x = condition, y = anticipation)) +
-  geom_boxplot(notch = T)
-  # facet_wrap(~condition)
-
-plotting_boxplot <- function(variable, notch = T) {
-  ggplot(emotions, aes(x = condition, y = {{ variable }})) +
-    geom_boxplot(notch = notch)
+plot_density <- function(emotion) {
+  ggplot(emotions, aes(x = {{ emotion }} )) +
+    geom_histogram(stat = 'density') +
+    facet_wrap(~condition) +
+    labs(title = str_to_sentence(as_label(enquo(emotion)))) +
+    theme(plot.title = element_text(hjust = .5))
 }
+
+plot_density(surprise)
+plot_density(fear)
+plot_density(anticipation)
+plot_density(anger)
+plot_density(trust)
+plot_density(joy)
+plot_density(sadness)
+plot_density(disgust)
+
+
+plotting_boxplot <- function(variable, grouping = condition, notch = F) {
+  ggplot(emotions, aes(x = {{grouping}}, y = {{ variable }})) +
+    geom_boxplot(notch = notch) +
+    theme(axis.title.y = element_text(size = 12, face = 'bold'),
+          axis.title.x = element_text(size = 12, face = 'bold'),
+          axis.ticks = element_line(linewidth = 2),
+          axis.text = element_text(size = 15))
+}
+
+plotting_boxplot(surprise, grouping = temperature)
+plotting_boxplot(fear, grouping = temperature)
+plotting_boxplot(trust, grouping = temperature)
+plotting_boxplot(joy, grouping = temperature)
+plotting_boxplot(sadness, grouping = temperature)
+plotting_boxplot(disgust, grouping = temperature)
+
+
 names(emotions)
-plotting_boxplot(joy)
+# include this
+plotting_boxplot(joy, notch = T)
 plotting_boxplot(anger)
 plotting_boxplot(trust)
 plotting_boxplot(surprise)
 plotting_boxplot(disgust)
-plotting_boxplot(sadness)
+# include this
+plotting_boxplot(sadness, notch = T)
 plotting_boxplot(fear)
 plotting_boxplot(anticipation)
+
+plotting_boxplot(joy, notch = T) + plotting_boxplot(sadness, notch = T)
+ggsave(filename = 'images/joy_vs_sadness.png')
+
+grid.arrange(plotting_boxplot(joy, notch = T), plotting_boxplot(sadness, notch = T), ncol = 2)
 
 # anova -------------------------------------------------------------------
 # assumption checks: normality
@@ -160,11 +164,6 @@ Honest_Significant_Difference <- function(emotion) {
     }
 }
 
-# ensures that the margins are adjusted properly
-# par(mar = c(bottom, left, top, right))
-# par(mar = c(5, 8, 4, 2))  # wider left margin
-# plot(Honest_Significant_Difference('surprise'), las = 1)
-
 
 # Kruskal - Wallis Test (condition)--------------------------------------------------
 
@@ -198,12 +197,26 @@ pairwise.wilcox.test(emotions$fear, emotions$condition,
 pairwise.wilcox.test(emotions$anticipation, emotions$condition,
                      p.adjust.method = "BH")
 
-# TODO: find a nice way to show these differences
-
-
+# only one significant difference between p+0.7 and p+1.3
+dunn_test(emotions, surprise~condition,
+                     p.adjust.method = "BH")
+# evidence of some difference in disgust between negative and positive prompt
+dunn_test(emotions, disgust~condition,
+          p.adjust.method = "BH")
+# clear-cut difference in joy between negative and positive prompt
+dunn_test(emotions, joy~condition,
+          p.adjust.method = "BH")
+# clear-cut difference in sadness between negative and positive prompt
+dunn_test(emotions, sadness~condition,
+          p.adjust.method = "BH")
+# clear-cut difference in fear between negative and positive prompt
+dunn_test(emotions, fear~condition,
+          p.adjust.method = "BH")
+# clear-cut difference in anticipation between negative and positive prompt
+dunn_test(emotions, anticipation~condition,
+          p.adjust.method = "BH")
 
 # Kruskal - Wallis test (temperature) -------------------------------------
-
 
 # significant difference in anger based on temperature
 kruskal.test(anger ~ temperature, data = emotions)
@@ -236,4 +249,22 @@ wilcox.test(fear ~ type_of_prompt, data = emotions)
 wilcox.test(anticipation ~ type_of_prompt, data = emotions)
 # significant difference in sadness based on different prompt type
 wilcox.test(trust ~ type_of_prompt, data = emotions)
+
+
+# Consistency with prompt -------------------------------------------------
+
+# check how many texts are coherent with the pre-specified prompt
+emotions %>% 
+  filter(joy > 1.96) %>% 
+  group_by(type_of_prompt) %>% 
+  summarize(frequency = n())
+
+emotions %>% 
+  filter(sadness > 1.96) %>% 
+  group_by(type_of_prompt) %>% 
+  summarize(frequency = n())
+
+# it seems apparent that even when instructed to output a text with a sad tone very few texts appear to be able to do so
+# indeed most of the texts seem to just output a joyful tone regardless of the type of prompt they have been supplied with
+
 
