@@ -9,6 +9,7 @@ format:
     code-fold: true
     code-tools: true
     df-print: paged
+output-dir: docs
 ---
 
 # Introduction
@@ -28,11 +29,12 @@ The analysis for the first study was carried out using `R` version 4.4.3 and the
 ```{r}
 library(pacman)
 p_load(tidyverse, ggplot2, readr, janitor, psych, ggthemes, car, stringr ,rstatix, patchwork, gridExtra, gt)
+theme_set(theme_minimal())
 ```
 
 Data was then imported:
 
-```{r}
+```{r,echo=FALSE}
 emotions <- read_csv("generated_data/cleaned/emotions.csv")
 # remove first two columns, keep all others
 emotions <- emotions[, 3:length(emotions)]
@@ -298,3 +300,16 @@ To set up this experiment and try it a few steps need to be carried out:
     When inside the app we imported the data as instructed in the app setup by separating instances of prompts used to generate the texts from the outputs (i.e., the two `.jsonl` files generated in step 2.
 
 *Gemma3* wrote the annotations and showed that only 5 texts out of 590 showed semantical inconsistencies. The results are available in the `llm-eval-gemini27B.csv` file.
+
+```{r, results='hide'}
+llm_eval_gemini27B <- read_csv("generated_data/llm-evals/llm-eval-gemini27B.csv")
+```
+
+```{r, echo=FALSE}
+ggplot(llm_eval_gemini27B, aes(x = Category, y = Count, fill = Category)) +
+  geom_col() +
+  labs(title = "# of Inconsistencies Found (out of 590 rated texts)") +
+  theme(plot.title = element_text(hjust = 0.5),
+        axis.text.x = element_blank(),
+        axis.title.x = element_blank())
+```

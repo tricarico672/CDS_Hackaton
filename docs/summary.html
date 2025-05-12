@@ -169,15 +169,12 @@ window.Quarto = {
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(pacman)</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">p_load</span>(tidyverse, ggplot2, readr, janitor, psych, ggthemes, car, stringr ,rstatix, patchwork, gridExtra, gt)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">p_load</span>(tidyverse, ggplot2, readr, janitor, psych, ggthemes, car, stringr ,rstatix, patchwork, gridExtra, gt)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">theme_set</span>(<span class="fu">theme_minimal</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <p>Data was then imported:</p>
 <div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>emotions <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"generated_data/cleaned/emotions.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 <div class="cell-output cell-output-stderr">
 <pre><code>New names:
 Rows: 590 Columns: 13
@@ -189,11 +186,6 @@ trust, surprise, disgust, jo...
 Specify the column types or set `show_col_types = FALSE` to quiet this message.
 • `` -&gt; `...1`</code></pre>
 </div>
-<details class="code-fold">
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># remove first two columns, keep all others</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>emotions <span class="ot">&lt;-</span> emotions[, <span class="dv">3</span><span class="sc">:</span><span class="fu">length</span>(emotions)]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 </div>
 <section id="data-pre-processing" class="level2" data-number="3.1">
 <h2 data-number="3.1" class="anchored" data-anchor-id="data-pre-processing"><span class="header-section-number">3.1</span> Data pre-processing</h2>
@@ -202,8 +194,8 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># check summary statistics by condition</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">describeBy</span>(emotions <span class="sc">~</span> condition)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># check summary statistics by condition</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">describeBy</span>(emotions <span class="sc">~</span> condition)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 </section>
@@ -218,23 +210,23 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
 <p>Below follows a summary of the results from the tests:</p>
 <div class="cell">
 <div class="cell-output-display">
-<div id="gewxwmzdha" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
-<style>#gewxwmzdha table {
+<div id="wpdhrulrbh" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#wpdhrulrbh table {
   font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-#gewxwmzdha thead, #gewxwmzdha tbody, #gewxwmzdha tfoot, #gewxwmzdha tr, #gewxwmzdha td, #gewxwmzdha th {
+#wpdhrulrbh thead, #wpdhrulrbh tbody, #wpdhrulrbh tfoot, #wpdhrulrbh tr, #wpdhrulrbh td, #wpdhrulrbh th {
   border-style: none;
 }
 
-#gewxwmzdha p {
+#wpdhrulrbh p {
   margin: 0;
   padding: 0;
 }
 
-#gewxwmzdha .gt_table {
+#wpdhrulrbh .gt_table {
   display: table;
   border-collapse: collapse;
   line-height: normal;
@@ -260,12 +252,12 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-left-color: #D3D3D3;
 }
 
-#gewxwmzdha .gt_caption {
+#wpdhrulrbh .gt_caption {
   padding-top: 4px;
   padding-bottom: 4px;
 }
 
-#gewxwmzdha .gt_title {
+#wpdhrulrbh .gt_title {
   color: #333333;
   font-size: 125%;
   font-weight: initial;
@@ -277,7 +269,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-bottom-width: 0;
 }
 
-#gewxwmzdha .gt_subtitle {
+#wpdhrulrbh .gt_subtitle {
   color: #333333;
   font-size: 85%;
   font-weight: initial;
@@ -289,7 +281,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-top-width: 0;
 }
 
-#gewxwmzdha .gt_heading {
+#wpdhrulrbh .gt_heading {
   background-color: #FFFFFF;
   text-align: center;
   border-bottom-color: #FFFFFF;
@@ -301,13 +293,13 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-right-color: #D3D3D3;
 }
 
-#gewxwmzdha .gt_bottom_border {
+#wpdhrulrbh .gt_bottom_border {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
 }
 
-#gewxwmzdha .gt_col_headings {
+#wpdhrulrbh .gt_col_headings {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -322,7 +314,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-right-color: #D3D3D3;
 }
 
-#gewxwmzdha .gt_col_heading {
+#wpdhrulrbh .gt_col_heading {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -342,7 +334,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   overflow-x: hidden;
 }
 
-#gewxwmzdha .gt_column_spanner_outer {
+#wpdhrulrbh .gt_column_spanner_outer {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -354,15 +346,15 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   padding-right: 4px;
 }
 
-#gewxwmzdha .gt_column_spanner_outer:first-child {
+#wpdhrulrbh .gt_column_spanner_outer:first-child {
   padding-left: 0;
 }
 
-#gewxwmzdha .gt_column_spanner_outer:last-child {
+#wpdhrulrbh .gt_column_spanner_outer:last-child {
   padding-right: 0;
 }
 
-#gewxwmzdha .gt_column_spanner {
+#wpdhrulrbh .gt_column_spanner {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
@@ -374,11 +366,11 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   width: 100%;
 }
 
-#gewxwmzdha .gt_spanner_row {
+#wpdhrulrbh .gt_spanner_row {
   border-bottom-style: hidden;
 }
 
-#gewxwmzdha .gt_group_heading {
+#wpdhrulrbh .gt_group_heading {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -404,7 +396,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   text-align: left;
 }
 
-#gewxwmzdha .gt_empty_group_heading {
+#wpdhrulrbh .gt_empty_group_heading {
   padding: 0.5px;
   color: #333333;
   background-color: #FFFFFF;
@@ -419,15 +411,15 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   vertical-align: middle;
 }
 
-#gewxwmzdha .gt_from_md > :first-child {
+#wpdhrulrbh .gt_from_md > :first-child {
   margin-top: 0;
 }
 
-#gewxwmzdha .gt_from_md > :last-child {
+#wpdhrulrbh .gt_from_md > :last-child {
   margin-bottom: 0;
 }
 
-#gewxwmzdha .gt_row {
+#wpdhrulrbh .gt_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -446,7 +438,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   overflow-x: hidden;
 }
 
-#gewxwmzdha .gt_stub {
+#wpdhrulrbh .gt_stub {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -459,7 +451,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   padding-right: 5px;
 }
 
-#gewxwmzdha .gt_stub_row_group {
+#wpdhrulrbh .gt_stub_row_group {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -473,15 +465,15 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   vertical-align: top;
 }
 
-#gewxwmzdha .gt_row_group_first td {
+#wpdhrulrbh .gt_row_group_first td {
   border-top-width: 2px;
 }
 
-#gewxwmzdha .gt_row_group_first th {
+#wpdhrulrbh .gt_row_group_first th {
   border-top-width: 2px;
 }
 
-#gewxwmzdha .gt_summary_row {
+#wpdhrulrbh .gt_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -491,16 +483,16 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   padding-right: 5px;
 }
 
-#gewxwmzdha .gt_first_summary_row {
+#wpdhrulrbh .gt_first_summary_row {
   border-top-style: solid;
   border-top-color: #D3D3D3;
 }
 
-#gewxwmzdha .gt_first_summary_row.thick {
+#wpdhrulrbh .gt_first_summary_row.thick {
   border-top-width: 2px;
 }
 
-#gewxwmzdha .gt_last_summary_row {
+#wpdhrulrbh .gt_last_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -510,7 +502,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-bottom-color: #D3D3D3;
 }
 
-#gewxwmzdha .gt_grand_summary_row {
+#wpdhrulrbh .gt_grand_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -520,7 +512,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   padding-right: 5px;
 }
 
-#gewxwmzdha .gt_first_grand_summary_row {
+#wpdhrulrbh .gt_first_grand_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -530,7 +522,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-top-color: #D3D3D3;
 }
 
-#gewxwmzdha .gt_last_grand_summary_row_top {
+#wpdhrulrbh .gt_last_grand_summary_row_top {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -540,11 +532,11 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-bottom-color: #D3D3D3;
 }
 
-#gewxwmzdha .gt_striped {
+#wpdhrulrbh .gt_striped {
   background-color: rgba(128, 128, 128, 0.05);
 }
 
-#gewxwmzdha .gt_table_body {
+#wpdhrulrbh .gt_table_body {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -553,7 +545,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-bottom-color: #D3D3D3;
 }
 
-#gewxwmzdha .gt_footnotes {
+#wpdhrulrbh .gt_footnotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -567,7 +559,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-right-color: #D3D3D3;
 }
 
-#gewxwmzdha .gt_footnote {
+#wpdhrulrbh .gt_footnote {
   margin: 0px;
   font-size: 90%;
   padding-top: 4px;
@@ -576,7 +568,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   padding-right: 5px;
 }
 
-#gewxwmzdha .gt_sourcenotes {
+#wpdhrulrbh .gt_sourcenotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -590,7 +582,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-right-color: #D3D3D3;
 }
 
-#gewxwmzdha .gt_sourcenote {
+#wpdhrulrbh .gt_sourcenote {
   font-size: 90%;
   padding-top: 4px;
   padding-bottom: 4px;
@@ -598,72 +590,72 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   padding-right: 5px;
 }
 
-#gewxwmzdha .gt_left {
+#wpdhrulrbh .gt_left {
   text-align: left;
 }
 
-#gewxwmzdha .gt_center {
+#wpdhrulrbh .gt_center {
   text-align: center;
 }
 
-#gewxwmzdha .gt_right {
+#wpdhrulrbh .gt_right {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-#gewxwmzdha .gt_font_normal {
+#wpdhrulrbh .gt_font_normal {
   font-weight: normal;
 }
 
-#gewxwmzdha .gt_font_bold {
+#wpdhrulrbh .gt_font_bold {
   font-weight: bold;
 }
 
-#gewxwmzdha .gt_font_italic {
+#wpdhrulrbh .gt_font_italic {
   font-style: italic;
 }
 
-#gewxwmzdha .gt_super {
+#wpdhrulrbh .gt_super {
   font-size: 65%;
 }
 
-#gewxwmzdha .gt_footnote_marks {
+#wpdhrulrbh .gt_footnote_marks {
   font-size: 75%;
   vertical-align: 0.4em;
   position: initial;
 }
 
-#gewxwmzdha .gt_asterisk {
+#wpdhrulrbh .gt_asterisk {
   font-size: 100%;
   vertical-align: 0;
 }
 
-#gewxwmzdha .gt_indent_1 {
+#wpdhrulrbh .gt_indent_1 {
   text-indent: 5px;
 }
 
-#gewxwmzdha .gt_indent_2 {
+#wpdhrulrbh .gt_indent_2 {
   text-indent: 10px;
 }
 
-#gewxwmzdha .gt_indent_3 {
+#wpdhrulrbh .gt_indent_3 {
   text-indent: 15px;
 }
 
-#gewxwmzdha .gt_indent_4 {
+#wpdhrulrbh .gt_indent_4 {
   text-indent: 20px;
 }
 
-#gewxwmzdha .gt_indent_5 {
+#wpdhrulrbh .gt_indent_5 {
   text-indent: 25px;
 }
 
-#gewxwmzdha .katex-display {
+#wpdhrulrbh .katex-display {
   display: inline-flex !important;
   margin-bottom: 0.75em !important;
 }
 
-#gewxwmzdha div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+#wpdhrulrbh div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
   height: 0px !important;
 }
 </style>
@@ -755,23 +747,23 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
 </div>
 <div class="cell">
 <div class="cell-output-display">
-<div id="odmunwvjgy" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
-<style>#odmunwvjgy table {
+<div id="vxdnpfkwam" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#vxdnpfkwam table {
   font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-#odmunwvjgy thead, #odmunwvjgy tbody, #odmunwvjgy tfoot, #odmunwvjgy tr, #odmunwvjgy td, #odmunwvjgy th {
+#vxdnpfkwam thead, #vxdnpfkwam tbody, #vxdnpfkwam tfoot, #vxdnpfkwam tr, #vxdnpfkwam td, #vxdnpfkwam th {
   border-style: none;
 }
 
-#odmunwvjgy p {
+#vxdnpfkwam p {
   margin: 0;
   padding: 0;
 }
 
-#odmunwvjgy .gt_table {
+#vxdnpfkwam .gt_table {
   display: table;
   border-collapse: collapse;
   line-height: normal;
@@ -797,12 +789,12 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-left-color: #D3D3D3;
 }
 
-#odmunwvjgy .gt_caption {
+#vxdnpfkwam .gt_caption {
   padding-top: 4px;
   padding-bottom: 4px;
 }
 
-#odmunwvjgy .gt_title {
+#vxdnpfkwam .gt_title {
   color: #333333;
   font-size: 125%;
   font-weight: initial;
@@ -814,7 +806,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-bottom-width: 0;
 }
 
-#odmunwvjgy .gt_subtitle {
+#vxdnpfkwam .gt_subtitle {
   color: #333333;
   font-size: 85%;
   font-weight: initial;
@@ -826,7 +818,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-top-width: 0;
 }
 
-#odmunwvjgy .gt_heading {
+#vxdnpfkwam .gt_heading {
   background-color: #FFFFFF;
   text-align: center;
   border-bottom-color: #FFFFFF;
@@ -838,13 +830,13 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-right-color: #D3D3D3;
 }
 
-#odmunwvjgy .gt_bottom_border {
+#vxdnpfkwam .gt_bottom_border {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
 }
 
-#odmunwvjgy .gt_col_headings {
+#vxdnpfkwam .gt_col_headings {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -859,7 +851,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-right-color: #D3D3D3;
 }
 
-#odmunwvjgy .gt_col_heading {
+#vxdnpfkwam .gt_col_heading {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -879,7 +871,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   overflow-x: hidden;
 }
 
-#odmunwvjgy .gt_column_spanner_outer {
+#vxdnpfkwam .gt_column_spanner_outer {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -891,15 +883,15 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   padding-right: 4px;
 }
 
-#odmunwvjgy .gt_column_spanner_outer:first-child {
+#vxdnpfkwam .gt_column_spanner_outer:first-child {
   padding-left: 0;
 }
 
-#odmunwvjgy .gt_column_spanner_outer:last-child {
+#vxdnpfkwam .gt_column_spanner_outer:last-child {
   padding-right: 0;
 }
 
-#odmunwvjgy .gt_column_spanner {
+#vxdnpfkwam .gt_column_spanner {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
@@ -911,11 +903,11 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   width: 100%;
 }
 
-#odmunwvjgy .gt_spanner_row {
+#vxdnpfkwam .gt_spanner_row {
   border-bottom-style: hidden;
 }
 
-#odmunwvjgy .gt_group_heading {
+#vxdnpfkwam .gt_group_heading {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -941,7 +933,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   text-align: left;
 }
 
-#odmunwvjgy .gt_empty_group_heading {
+#vxdnpfkwam .gt_empty_group_heading {
   padding: 0.5px;
   color: #333333;
   background-color: #FFFFFF;
@@ -956,15 +948,15 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   vertical-align: middle;
 }
 
-#odmunwvjgy .gt_from_md > :first-child {
+#vxdnpfkwam .gt_from_md > :first-child {
   margin-top: 0;
 }
 
-#odmunwvjgy .gt_from_md > :last-child {
+#vxdnpfkwam .gt_from_md > :last-child {
   margin-bottom: 0;
 }
 
-#odmunwvjgy .gt_row {
+#vxdnpfkwam .gt_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -983,7 +975,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   overflow-x: hidden;
 }
 
-#odmunwvjgy .gt_stub {
+#vxdnpfkwam .gt_stub {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -996,7 +988,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   padding-right: 5px;
 }
 
-#odmunwvjgy .gt_stub_row_group {
+#vxdnpfkwam .gt_stub_row_group {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1010,15 +1002,15 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   vertical-align: top;
 }
 
-#odmunwvjgy .gt_row_group_first td {
+#vxdnpfkwam .gt_row_group_first td {
   border-top-width: 2px;
 }
 
-#odmunwvjgy .gt_row_group_first th {
+#vxdnpfkwam .gt_row_group_first th {
   border-top-width: 2px;
 }
 
-#odmunwvjgy .gt_summary_row {
+#vxdnpfkwam .gt_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -1028,16 +1020,16 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   padding-right: 5px;
 }
 
-#odmunwvjgy .gt_first_summary_row {
+#vxdnpfkwam .gt_first_summary_row {
   border-top-style: solid;
   border-top-color: #D3D3D3;
 }
 
-#odmunwvjgy .gt_first_summary_row.thick {
+#vxdnpfkwam .gt_first_summary_row.thick {
   border-top-width: 2px;
 }
 
-#odmunwvjgy .gt_last_summary_row {
+#vxdnpfkwam .gt_last_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1047,7 +1039,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-bottom-color: #D3D3D3;
 }
 
-#odmunwvjgy .gt_grand_summary_row {
+#vxdnpfkwam .gt_grand_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -1057,7 +1049,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   padding-right: 5px;
 }
 
-#odmunwvjgy .gt_first_grand_summary_row {
+#vxdnpfkwam .gt_first_grand_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1067,7 +1059,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-top-color: #D3D3D3;
 }
 
-#odmunwvjgy .gt_last_grand_summary_row_top {
+#vxdnpfkwam .gt_last_grand_summary_row_top {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1077,11 +1069,11 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-bottom-color: #D3D3D3;
 }
 
-#odmunwvjgy .gt_striped {
+#vxdnpfkwam .gt_striped {
   background-color: rgba(128, 128, 128, 0.05);
 }
 
-#odmunwvjgy .gt_table_body {
+#vxdnpfkwam .gt_table_body {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -1090,7 +1082,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-bottom-color: #D3D3D3;
 }
 
-#odmunwvjgy .gt_footnotes {
+#vxdnpfkwam .gt_footnotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -1104,7 +1096,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-right-color: #D3D3D3;
 }
 
-#odmunwvjgy .gt_footnote {
+#vxdnpfkwam .gt_footnote {
   margin: 0px;
   font-size: 90%;
   padding-top: 4px;
@@ -1113,7 +1105,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   padding-right: 5px;
 }
 
-#odmunwvjgy .gt_sourcenotes {
+#vxdnpfkwam .gt_sourcenotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -1127,7 +1119,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-right-color: #D3D3D3;
 }
 
-#odmunwvjgy .gt_sourcenote {
+#vxdnpfkwam .gt_sourcenote {
   font-size: 90%;
   padding-top: 4px;
   padding-bottom: 4px;
@@ -1135,72 +1127,72 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   padding-right: 5px;
 }
 
-#odmunwvjgy .gt_left {
+#vxdnpfkwam .gt_left {
   text-align: left;
 }
 
-#odmunwvjgy .gt_center {
+#vxdnpfkwam .gt_center {
   text-align: center;
 }
 
-#odmunwvjgy .gt_right {
+#vxdnpfkwam .gt_right {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-#odmunwvjgy .gt_font_normal {
+#vxdnpfkwam .gt_font_normal {
   font-weight: normal;
 }
 
-#odmunwvjgy .gt_font_bold {
+#vxdnpfkwam .gt_font_bold {
   font-weight: bold;
 }
 
-#odmunwvjgy .gt_font_italic {
+#vxdnpfkwam .gt_font_italic {
   font-style: italic;
 }
 
-#odmunwvjgy .gt_super {
+#vxdnpfkwam .gt_super {
   font-size: 65%;
 }
 
-#odmunwvjgy .gt_footnote_marks {
+#vxdnpfkwam .gt_footnote_marks {
   font-size: 75%;
   vertical-align: 0.4em;
   position: initial;
 }
 
-#odmunwvjgy .gt_asterisk {
+#vxdnpfkwam .gt_asterisk {
   font-size: 100%;
   vertical-align: 0;
 }
 
-#odmunwvjgy .gt_indent_1 {
+#vxdnpfkwam .gt_indent_1 {
   text-indent: 5px;
 }
 
-#odmunwvjgy .gt_indent_2 {
+#vxdnpfkwam .gt_indent_2 {
   text-indent: 10px;
 }
 
-#odmunwvjgy .gt_indent_3 {
+#vxdnpfkwam .gt_indent_3 {
   text-indent: 15px;
 }
 
-#odmunwvjgy .gt_indent_4 {
+#vxdnpfkwam .gt_indent_4 {
   text-indent: 20px;
 }
 
-#odmunwvjgy .gt_indent_5 {
+#vxdnpfkwam .gt_indent_5 {
   text-indent: 25px;
 }
 
-#odmunwvjgy .katex-display {
+#vxdnpfkwam .katex-display {
   display: inline-flex !important;
   margin-bottom: 0.75em !important;
 }
 
-#odmunwvjgy div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+#vxdnpfkwam div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
   height: 0px !important;
 }
 </style>
@@ -1519,23 +1511,23 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
 <p>This is an alternative to the ANOVA test and can be used for this specific dataset. As in the ANOVA test if the null hypothesis is rejected, then we know at least one group is different on average compared to another. The results for this test are reported below.</p>
 <div class="cell">
 <div class="cell-output-display">
-<div id="lsgawbtaws" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
-<style>#lsgawbtaws table {
+<div id="buhgtrlwnc" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#buhgtrlwnc table {
   font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-#lsgawbtaws thead, #lsgawbtaws tbody, #lsgawbtaws tfoot, #lsgawbtaws tr, #lsgawbtaws td, #lsgawbtaws th {
+#buhgtrlwnc thead, #buhgtrlwnc tbody, #buhgtrlwnc tfoot, #buhgtrlwnc tr, #buhgtrlwnc td, #buhgtrlwnc th {
   border-style: none;
 }
 
-#lsgawbtaws p {
+#buhgtrlwnc p {
   margin: 0;
   padding: 0;
 }
 
-#lsgawbtaws .gt_table {
+#buhgtrlwnc .gt_table {
   display: table;
   border-collapse: collapse;
   line-height: normal;
@@ -1561,12 +1553,12 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-left-color: #D3D3D3;
 }
 
-#lsgawbtaws .gt_caption {
+#buhgtrlwnc .gt_caption {
   padding-top: 4px;
   padding-bottom: 4px;
 }
 
-#lsgawbtaws .gt_title {
+#buhgtrlwnc .gt_title {
   color: #333333;
   font-size: 125%;
   font-weight: initial;
@@ -1578,7 +1570,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-bottom-width: 0;
 }
 
-#lsgawbtaws .gt_subtitle {
+#buhgtrlwnc .gt_subtitle {
   color: #333333;
   font-size: 85%;
   font-weight: initial;
@@ -1590,7 +1582,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-top-width: 0;
 }
 
-#lsgawbtaws .gt_heading {
+#buhgtrlwnc .gt_heading {
   background-color: #FFFFFF;
   text-align: center;
   border-bottom-color: #FFFFFF;
@@ -1602,13 +1594,13 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-right-color: #D3D3D3;
 }
 
-#lsgawbtaws .gt_bottom_border {
+#buhgtrlwnc .gt_bottom_border {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
 }
 
-#lsgawbtaws .gt_col_headings {
+#buhgtrlwnc .gt_col_headings {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -1623,7 +1615,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-right-color: #D3D3D3;
 }
 
-#lsgawbtaws .gt_col_heading {
+#buhgtrlwnc .gt_col_heading {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1643,7 +1635,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   overflow-x: hidden;
 }
 
-#lsgawbtaws .gt_column_spanner_outer {
+#buhgtrlwnc .gt_column_spanner_outer {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1655,15 +1647,15 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   padding-right: 4px;
 }
 
-#lsgawbtaws .gt_column_spanner_outer:first-child {
+#buhgtrlwnc .gt_column_spanner_outer:first-child {
   padding-left: 0;
 }
 
-#lsgawbtaws .gt_column_spanner_outer:last-child {
+#buhgtrlwnc .gt_column_spanner_outer:last-child {
   padding-right: 0;
 }
 
-#lsgawbtaws .gt_column_spanner {
+#buhgtrlwnc .gt_column_spanner {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
@@ -1675,11 +1667,11 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   width: 100%;
 }
 
-#lsgawbtaws .gt_spanner_row {
+#buhgtrlwnc .gt_spanner_row {
   border-bottom-style: hidden;
 }
 
-#lsgawbtaws .gt_group_heading {
+#buhgtrlwnc .gt_group_heading {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1705,7 +1697,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   text-align: left;
 }
 
-#lsgawbtaws .gt_empty_group_heading {
+#buhgtrlwnc .gt_empty_group_heading {
   padding: 0.5px;
   color: #333333;
   background-color: #FFFFFF;
@@ -1720,15 +1712,15 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   vertical-align: middle;
 }
 
-#lsgawbtaws .gt_from_md > :first-child {
+#buhgtrlwnc .gt_from_md > :first-child {
   margin-top: 0;
 }
 
-#lsgawbtaws .gt_from_md > :last-child {
+#buhgtrlwnc .gt_from_md > :last-child {
   margin-bottom: 0;
 }
 
-#lsgawbtaws .gt_row {
+#buhgtrlwnc .gt_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1747,7 +1739,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   overflow-x: hidden;
 }
 
-#lsgawbtaws .gt_stub {
+#buhgtrlwnc .gt_stub {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1760,7 +1752,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   padding-right: 5px;
 }
 
-#lsgawbtaws .gt_stub_row_group {
+#buhgtrlwnc .gt_stub_row_group {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1774,15 +1766,15 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   vertical-align: top;
 }
 
-#lsgawbtaws .gt_row_group_first td {
+#buhgtrlwnc .gt_row_group_first td {
   border-top-width: 2px;
 }
 
-#lsgawbtaws .gt_row_group_first th {
+#buhgtrlwnc .gt_row_group_first th {
   border-top-width: 2px;
 }
 
-#lsgawbtaws .gt_summary_row {
+#buhgtrlwnc .gt_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -1792,16 +1784,16 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   padding-right: 5px;
 }
 
-#lsgawbtaws .gt_first_summary_row {
+#buhgtrlwnc .gt_first_summary_row {
   border-top-style: solid;
   border-top-color: #D3D3D3;
 }
 
-#lsgawbtaws .gt_first_summary_row.thick {
+#buhgtrlwnc .gt_first_summary_row.thick {
   border-top-width: 2px;
 }
 
-#lsgawbtaws .gt_last_summary_row {
+#buhgtrlwnc .gt_last_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1811,7 +1803,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-bottom-color: #D3D3D3;
 }
 
-#lsgawbtaws .gt_grand_summary_row {
+#buhgtrlwnc .gt_grand_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -1821,7 +1813,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   padding-right: 5px;
 }
 
-#lsgawbtaws .gt_first_grand_summary_row {
+#buhgtrlwnc .gt_first_grand_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1831,7 +1823,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-top-color: #D3D3D3;
 }
 
-#lsgawbtaws .gt_last_grand_summary_row_top {
+#buhgtrlwnc .gt_last_grand_summary_row_top {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1841,11 +1833,11 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-bottom-color: #D3D3D3;
 }
 
-#lsgawbtaws .gt_striped {
+#buhgtrlwnc .gt_striped {
   background-color: rgba(128, 128, 128, 0.05);
 }
 
-#lsgawbtaws .gt_table_body {
+#buhgtrlwnc .gt_table_body {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -1854,7 +1846,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-bottom-color: #D3D3D3;
 }
 
-#lsgawbtaws .gt_footnotes {
+#buhgtrlwnc .gt_footnotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -1868,7 +1860,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-right-color: #D3D3D3;
 }
 
-#lsgawbtaws .gt_footnote {
+#buhgtrlwnc .gt_footnote {
   margin: 0px;
   font-size: 90%;
   padding-top: 4px;
@@ -1877,7 +1869,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   padding-right: 5px;
 }
 
-#lsgawbtaws .gt_sourcenotes {
+#buhgtrlwnc .gt_sourcenotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -1891,7 +1883,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-right-color: #D3D3D3;
 }
 
-#lsgawbtaws .gt_sourcenote {
+#buhgtrlwnc .gt_sourcenote {
   font-size: 90%;
   padding-top: 4px;
   padding-bottom: 4px;
@@ -1899,72 +1891,72 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   padding-right: 5px;
 }
 
-#lsgawbtaws .gt_left {
+#buhgtrlwnc .gt_left {
   text-align: left;
 }
 
-#lsgawbtaws .gt_center {
+#buhgtrlwnc .gt_center {
   text-align: center;
 }
 
-#lsgawbtaws .gt_right {
+#buhgtrlwnc .gt_right {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-#lsgawbtaws .gt_font_normal {
+#buhgtrlwnc .gt_font_normal {
   font-weight: normal;
 }
 
-#lsgawbtaws .gt_font_bold {
+#buhgtrlwnc .gt_font_bold {
   font-weight: bold;
 }
 
-#lsgawbtaws .gt_font_italic {
+#buhgtrlwnc .gt_font_italic {
   font-style: italic;
 }
 
-#lsgawbtaws .gt_super {
+#buhgtrlwnc .gt_super {
   font-size: 65%;
 }
 
-#lsgawbtaws .gt_footnote_marks {
+#buhgtrlwnc .gt_footnote_marks {
   font-size: 75%;
   vertical-align: 0.4em;
   position: initial;
 }
 
-#lsgawbtaws .gt_asterisk {
+#buhgtrlwnc .gt_asterisk {
   font-size: 100%;
   vertical-align: 0;
 }
 
-#lsgawbtaws .gt_indent_1 {
+#buhgtrlwnc .gt_indent_1 {
   text-indent: 5px;
 }
 
-#lsgawbtaws .gt_indent_2 {
+#buhgtrlwnc .gt_indent_2 {
   text-indent: 10px;
 }
 
-#lsgawbtaws .gt_indent_3 {
+#buhgtrlwnc .gt_indent_3 {
   text-indent: 15px;
 }
 
-#lsgawbtaws .gt_indent_4 {
+#buhgtrlwnc .gt_indent_4 {
   text-indent: 20px;
 }
 
-#lsgawbtaws .gt_indent_5 {
+#buhgtrlwnc .gt_indent_5 {
   text-indent: 25px;
 }
 
-#lsgawbtaws .katex-display {
+#buhgtrlwnc .katex-display {
   display: inline-flex !important;
   margin-bottom: 0.75em !important;
 }
 
-#lsgawbtaws div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+#buhgtrlwnc div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
   height: 0px !important;
 }
 </style>
@@ -2051,45 +2043,45 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># only one significant difference between p+0.7 and p+1.3</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dunn_test</span>(emotions, surprise<span class="sc">~</span>condition,</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>                     <span class="at">p.adjust.method =</span> <span class="st">"BH"</span>)</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co"># evidence of some difference in disgust between negative and positive prompt</span></span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="fu">dunn_test</span>(emotions, disgust<span class="sc">~</span>condition,</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>          <span class="at">p.adjust.method =</span> <span class="st">"BH"</span>)</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="co"># clear-cut difference in joy between negative and positive prompt</span></span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="fu">dunn_test</span>(emotions, joy<span class="sc">~</span>condition,</span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>          <span class="at">p.adjust.method =</span> <span class="st">"BH"</span>)</span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="co"># clear-cut difference in sadness between negative and positive prompt</span></span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="fu">dunn_test</span>(emotions, sadness<span class="sc">~</span>condition,</span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>          <span class="at">p.adjust.method =</span> <span class="st">"BH"</span>)</span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="co"># clear-cut difference in fear between negative and positive prompt</span></span>
-<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="fu">dunn_test</span>(emotions, fear<span class="sc">~</span>condition,</span>
-<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>          <span class="at">p.adjust.method =</span> <span class="st">"BH"</span>)</span>
-<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="co"># clear-cut difference in anticipation between negative and positive prompt</span></span>
-<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a><span class="fu">dunn_test</span>(emotions, anticipation<span class="sc">~</span>condition,</span>
-<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>          <span class="at">p.adjust.method =</span> <span class="st">"BH"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># only one significant difference between p+0.7 and p+1.3</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dunn_test</span>(emotions, surprise<span class="sc">~</span>condition,</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>                     <span class="at">p.adjust.method =</span> <span class="st">"BH"</span>)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co"># evidence of some difference in disgust between negative and positive prompt</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="fu">dunn_test</span>(emotions, disgust<span class="sc">~</span>condition,</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>          <span class="at">p.adjust.method =</span> <span class="st">"BH"</span>)</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co"># clear-cut difference in joy between negative and positive prompt</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="fu">dunn_test</span>(emotions, joy<span class="sc">~</span>condition,</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>          <span class="at">p.adjust.method =</span> <span class="st">"BH"</span>)</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="co"># clear-cut difference in sadness between negative and positive prompt</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="fu">dunn_test</span>(emotions, sadness<span class="sc">~</span>condition,</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>          <span class="at">p.adjust.method =</span> <span class="st">"BH"</span>)</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="co"># clear-cut difference in fear between negative and positive prompt</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="fu">dunn_test</span>(emotions, fear<span class="sc">~</span>condition,</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>          <span class="at">p.adjust.method =</span> <span class="st">"BH"</span>)</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="co"># clear-cut difference in anticipation between negative and positive prompt</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="fu">dunn_test</span>(emotions, anticipation<span class="sc">~</span>condition,</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>          <span class="at">p.adjust.method =</span> <span class="st">"BH"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <div class="cell">
 <div class="cell-output-display">
-<div id="jrkmuonjya" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
-<style>#jrkmuonjya table {
+<div id="jexrceopsl" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#jexrceopsl table {
   font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-#jrkmuonjya thead, #jrkmuonjya tbody, #jrkmuonjya tfoot, #jrkmuonjya tr, #jrkmuonjya td, #jrkmuonjya th {
+#jexrceopsl thead, #jexrceopsl tbody, #jexrceopsl tfoot, #jexrceopsl tr, #jexrceopsl td, #jexrceopsl th {
   border-style: none;
 }
 
-#jrkmuonjya p {
+#jexrceopsl p {
   margin: 0;
   padding: 0;
 }
 
-#jrkmuonjya .gt_table {
+#jexrceopsl .gt_table {
   display: table;
   border-collapse: collapse;
   line-height: normal;
@@ -2115,12 +2107,12 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-left-color: #D3D3D3;
 }
 
-#jrkmuonjya .gt_caption {
+#jexrceopsl .gt_caption {
   padding-top: 4px;
   padding-bottom: 4px;
 }
 
-#jrkmuonjya .gt_title {
+#jexrceopsl .gt_title {
   color: #333333;
   font-size: 125%;
   font-weight: initial;
@@ -2132,7 +2124,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-bottom-width: 0;
 }
 
-#jrkmuonjya .gt_subtitle {
+#jexrceopsl .gt_subtitle {
   color: #333333;
   font-size: 85%;
   font-weight: initial;
@@ -2144,7 +2136,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-top-width: 0;
 }
 
-#jrkmuonjya .gt_heading {
+#jexrceopsl .gt_heading {
   background-color: #FFFFFF;
   text-align: center;
   border-bottom-color: #FFFFFF;
@@ -2156,13 +2148,13 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-right-color: #D3D3D3;
 }
 
-#jrkmuonjya .gt_bottom_border {
+#jexrceopsl .gt_bottom_border {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
 }
 
-#jrkmuonjya .gt_col_headings {
+#jexrceopsl .gt_col_headings {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -2177,7 +2169,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-right-color: #D3D3D3;
 }
 
-#jrkmuonjya .gt_col_heading {
+#jexrceopsl .gt_col_heading {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -2197,7 +2189,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   overflow-x: hidden;
 }
 
-#jrkmuonjya .gt_column_spanner_outer {
+#jexrceopsl .gt_column_spanner_outer {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -2209,15 +2201,15 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   padding-right: 4px;
 }
 
-#jrkmuonjya .gt_column_spanner_outer:first-child {
+#jexrceopsl .gt_column_spanner_outer:first-child {
   padding-left: 0;
 }
 
-#jrkmuonjya .gt_column_spanner_outer:last-child {
+#jexrceopsl .gt_column_spanner_outer:last-child {
   padding-right: 0;
 }
 
-#jrkmuonjya .gt_column_spanner {
+#jexrceopsl .gt_column_spanner {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
@@ -2229,11 +2221,11 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   width: 100%;
 }
 
-#jrkmuonjya .gt_spanner_row {
+#jexrceopsl .gt_spanner_row {
   border-bottom-style: hidden;
 }
 
-#jrkmuonjya .gt_group_heading {
+#jexrceopsl .gt_group_heading {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -2259,7 +2251,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   text-align: left;
 }
 
-#jrkmuonjya .gt_empty_group_heading {
+#jexrceopsl .gt_empty_group_heading {
   padding: 0.5px;
   color: #333333;
   background-color: #FFFFFF;
@@ -2274,15 +2266,15 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   vertical-align: middle;
 }
 
-#jrkmuonjya .gt_from_md > :first-child {
+#jexrceopsl .gt_from_md > :first-child {
   margin-top: 0;
 }
 
-#jrkmuonjya .gt_from_md > :last-child {
+#jexrceopsl .gt_from_md > :last-child {
   margin-bottom: 0;
 }
 
-#jrkmuonjya .gt_row {
+#jexrceopsl .gt_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -2301,7 +2293,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   overflow-x: hidden;
 }
 
-#jrkmuonjya .gt_stub {
+#jexrceopsl .gt_stub {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -2314,7 +2306,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   padding-right: 5px;
 }
 
-#jrkmuonjya .gt_stub_row_group {
+#jexrceopsl .gt_stub_row_group {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -2328,15 +2320,15 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   vertical-align: top;
 }
 
-#jrkmuonjya .gt_row_group_first td {
+#jexrceopsl .gt_row_group_first td {
   border-top-width: 2px;
 }
 
-#jrkmuonjya .gt_row_group_first th {
+#jexrceopsl .gt_row_group_first th {
   border-top-width: 2px;
 }
 
-#jrkmuonjya .gt_summary_row {
+#jexrceopsl .gt_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -2346,16 +2338,16 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   padding-right: 5px;
 }
 
-#jrkmuonjya .gt_first_summary_row {
+#jexrceopsl .gt_first_summary_row {
   border-top-style: solid;
   border-top-color: #D3D3D3;
 }
 
-#jrkmuonjya .gt_first_summary_row.thick {
+#jexrceopsl .gt_first_summary_row.thick {
   border-top-width: 2px;
 }
 
-#jrkmuonjya .gt_last_summary_row {
+#jexrceopsl .gt_last_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -2365,7 +2357,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-bottom-color: #D3D3D3;
 }
 
-#jrkmuonjya .gt_grand_summary_row {
+#jexrceopsl .gt_grand_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -2375,7 +2367,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   padding-right: 5px;
 }
 
-#jrkmuonjya .gt_first_grand_summary_row {
+#jexrceopsl .gt_first_grand_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -2385,7 +2377,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-top-color: #D3D3D3;
 }
 
-#jrkmuonjya .gt_last_grand_summary_row_top {
+#jexrceopsl .gt_last_grand_summary_row_top {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -2395,11 +2387,11 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-bottom-color: #D3D3D3;
 }
 
-#jrkmuonjya .gt_striped {
+#jexrceopsl .gt_striped {
   background-color: rgba(128, 128, 128, 0.05);
 }
 
-#jrkmuonjya .gt_table_body {
+#jexrceopsl .gt_table_body {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -2408,7 +2400,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-bottom-color: #D3D3D3;
 }
 
-#jrkmuonjya .gt_footnotes {
+#jexrceopsl .gt_footnotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -2422,7 +2414,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-right-color: #D3D3D3;
 }
 
-#jrkmuonjya .gt_footnote {
+#jexrceopsl .gt_footnote {
   margin: 0px;
   font-size: 90%;
   padding-top: 4px;
@@ -2431,7 +2423,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   padding-right: 5px;
 }
 
-#jrkmuonjya .gt_sourcenotes {
+#jexrceopsl .gt_sourcenotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -2445,7 +2437,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-right-color: #D3D3D3;
 }
 
-#jrkmuonjya .gt_sourcenote {
+#jexrceopsl .gt_sourcenote {
   font-size: 90%;
   padding-top: 4px;
   padding-bottom: 4px;
@@ -2453,72 +2445,72 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   padding-right: 5px;
 }
 
-#jrkmuonjya .gt_left {
+#jexrceopsl .gt_left {
   text-align: left;
 }
 
-#jrkmuonjya .gt_center {
+#jexrceopsl .gt_center {
   text-align: center;
 }
 
-#jrkmuonjya .gt_right {
+#jexrceopsl .gt_right {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-#jrkmuonjya .gt_font_normal {
+#jexrceopsl .gt_font_normal {
   font-weight: normal;
 }
 
-#jrkmuonjya .gt_font_bold {
+#jexrceopsl .gt_font_bold {
   font-weight: bold;
 }
 
-#jrkmuonjya .gt_font_italic {
+#jexrceopsl .gt_font_italic {
   font-style: italic;
 }
 
-#jrkmuonjya .gt_super {
+#jexrceopsl .gt_super {
   font-size: 65%;
 }
 
-#jrkmuonjya .gt_footnote_marks {
+#jexrceopsl .gt_footnote_marks {
   font-size: 75%;
   vertical-align: 0.4em;
   position: initial;
 }
 
-#jrkmuonjya .gt_asterisk {
+#jexrceopsl .gt_asterisk {
   font-size: 100%;
   vertical-align: 0;
 }
 
-#jrkmuonjya .gt_indent_1 {
+#jexrceopsl .gt_indent_1 {
   text-indent: 5px;
 }
 
-#jrkmuonjya .gt_indent_2 {
+#jexrceopsl .gt_indent_2 {
   text-indent: 10px;
 }
 
-#jrkmuonjya .gt_indent_3 {
+#jexrceopsl .gt_indent_3 {
   text-indent: 15px;
 }
 
-#jrkmuonjya .gt_indent_4 {
+#jexrceopsl .gt_indent_4 {
   text-indent: 20px;
 }
 
-#jrkmuonjya .gt_indent_5 {
+#jexrceopsl .gt_indent_5 {
   text-indent: 25px;
 }
 
-#jrkmuonjya .katex-display {
+#jexrceopsl .katex-display {
   display: inline-flex !important;
   margin-bottom: 0.75em !important;
 }
 
-#jrkmuonjya div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+#jexrceopsl div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
   height: 0px !important;
 }
 </style>
@@ -3276,9 +3268,35 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
 <li><p>set up Factgenie by referring to the official documentation available at <a href="https://github.com/ufal/factgenie" class="uri">https://github.com/ufal/factgenie</a></p></li>
 <li><p>run the <code>make_jsonl_input.py</code> and <code>make_jsonl_output.py</code> to prepare data for the analysis inside of the self-hosted web app offered by Factgenie</p></li>
 <li><p>start up the app by running the following in a CLI instance:</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">factgenie</span> run <span class="at">--host</span><span class="op">=</span>127.0.0.1 <span class="at">--port</span> 8890</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>When inside the app we imported the</p></li>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">factgenie</span> run <span class="at">--host</span><span class="op">=</span>127.0.0.1 <span class="at">--port</span> 8890</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>When inside the app we imported the data as instructed in the app setup by separating instances of prompts used to generate the texts from the outputs (i.e., the two <code>.jsonl</code> files generated in step 2.</p></li>
 </ol>
+<p><em>Gemma3</em> wrote the annotations and showed that only 5 texts out of 590 showed semantical inconsistencies. The results are available in the <code>llm-eval-gemini27B.csv</code> file.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>llm_eval_gemini27B <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"generated_data/llm-evals/llm-eval-gemini27B.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stderr">
+<pre><code>Rows: 3 Columns: 8
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr (4): Dataset, Split, Setup, Category
+dbl (4): Ex. annotated, Count, Avg. per ex., Prevalence
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="summary_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
 <!-- -->
 
 </section>
@@ -3767,33 +3785,35 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 <span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="co">    code-fold: true</span></span>
 <span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="co">    code-tools: true</span></span>
 <span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="co">    df-print: paged</span></span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
-<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="fu"># Introduction</span></span>
-<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>Understanding to what extent the results of a Large Language Model (LLM) can be trusted in text generation tasks is of fundamental importance nowadays. To this end, this technical report discusses the results of an experiment carried out using an open source LLM (Mistral) to understand how well this kind of model can represent the emotional context conveyed through a textual prompt. Mistral's model was instructed to generate texts following a prompt that could be either positively or negatively charged emotionally. Moreover, the temperature of the model was also manipulated to check for possible drifts from the given prompts with higher temperatures. The results of a semantic frame analysis are reported to show that the emotions that occur in an LLM-generated text are mostly in line with the expectations provided by the content of the prompt used to generate the text. Additional analyses are discussed to quantify semantical and logical correctness to show that open source LLMs perform very well for the task considered in the current experiment but are not immune to biases.</span>
-<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>This additional portion of the report goes through the technical steps and setup of the code used to produce the data and analyze it.</span>
-<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a><span class="fu"># Generating data</span></span>
-<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>Data for this experiment was produced in two steps. During the first iteration, carried out calling the API remotely, we asked the API to produce the entire sample of data (around 600 texts, 200 for each temperature level selected). However, we noticed that most of the texts produced with the highest temperature (1.3) were not usable and after cleaning them (in Python using the <span class="in">`clean_data.py`</span> script) we had to rebalance the groups and adjust for the dropped texts from the highest temperature group. To this end, the second iteration of the text generation happened. This time, however, the same Mistral model was run locally using the framework provided by <span class="in">`ollama`</span> and exploiting the connection to the locally hosted API. The texts produced in this fashion passed all cleaning tests and were included in the final dataset by running the <span class="in">`clean_data.py`</span> script and saving the final merged dataset in <span class="in">`.csv`</span> format. The last step was to compute $z$-scores for each emotion embedded in the generated texts using the <span class="in">`create_emotions.py`</span> script. The final dataset (<span class="in">`emotions.csv)`</span> was then saved and was used for the subsequent analyses. After performing this step, no more data cleaning was needed.</span>
-<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a><span class="fu"># Experiment 1 - Statistical Analysis</span></span>
-<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>The analysis for the first study was carried out using <span class="in">`R`</span> version 4.4.3 and the following packages:</span>
-<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(pacman)</span>
-<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a><span class="fu">p_load</span>(tidyverse, ggplot2, readr, janitor, psych, ggthemes, car, stringr ,rstatix, patchwork, gridExtra, gt)</span>
-<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a>Data was then imported:</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="an">output-dir:</span><span class="co"> docs</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a><span class="fu"># Introduction</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>Understanding to what extent the results of a Large Language Model (LLM) can be trusted in text generation tasks is of fundamental importance nowadays. To this end, this technical report discusses the results of an experiment carried out using an open source LLM (Mistral) to understand how well this kind of model can represent the emotional context conveyed through a textual prompt. Mistral's model was instructed to generate texts following a prompt that could be either positively or negatively charged emotionally. Moreover, the temperature of the model was also manipulated to check for possible drifts from the given prompts with higher temperatures. The results of a semantic frame analysis are reported to show that the emotions that occur in an LLM-generated text are mostly in line with the expectations provided by the content of the prompt used to generate the text. Additional analyses are discussed to quantify semantical and logical correctness to show that open source LLMs perform very well for the task considered in the current experiment but are not immune to biases.</span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>This additional portion of the report goes through the technical steps and setup of the code used to produce the data and analyze it.</span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a><span class="fu"># Generating data</span></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>Data for this experiment was produced in two steps. During the first iteration, carried out calling the API remotely, we asked the API to produce the entire sample of data (around 600 texts, 200 for each temperature level selected). However, we noticed that most of the texts produced with the highest temperature (1.3) were not usable and after cleaning them (in Python using the <span class="in">`clean_data.py`</span> script) we had to rebalance the groups and adjust for the dropped texts from the highest temperature group. To this end, the second iteration of the text generation happened. This time, however, the same Mistral model was run locally using the framework provided by <span class="in">`ollama`</span> and exploiting the connection to the locally hosted API. The texts produced in this fashion passed all cleaning tests and were included in the final dataset by running the <span class="in">`clean_data.py`</span> script and saving the final merged dataset in <span class="in">`.csv`</span> format. The last step was to compute $z$-scores for each emotion embedded in the generated texts using the <span class="in">`create_emotions.py`</span> script. The final dataset (<span class="in">`emotions.csv)`</span> was then saved and was used for the subsequent analyses. After performing this step, no more data cleaning was needed.</span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a><span class="fu"># Experiment 1 - Statistical Analysis</span></span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>The analysis for the first study was carried out using <span class="in">`R`</span> version 4.4.3 and the following packages:</span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(pacman)</span>
+<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a><span class="fu">p_load</span>(tidyverse, ggplot2, readr, janitor, psych, ggthemes, car, stringr ,rstatix, patchwork, gridExtra, gt)</span>
+<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a><span class="fu">theme_set</span>(<span class="fu">theme_minimal</span>())</span>
+<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb8-36"><a href="#cb8-36" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-39"><a href="#cb8-39" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb8-40"><a href="#cb8-40" aria-hidden="true" tabindex="-1"></a>emotions <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"generated_data/cleaned/emotions.csv"</span>)</span>
-<span id="cb8-41"><a href="#cb8-41" aria-hidden="true" tabindex="-1"></a><span class="co"># remove first two columns, keep all others</span></span>
-<span id="cb8-42"><a href="#cb8-42" aria-hidden="true" tabindex="-1"></a>emotions <span class="ot">&lt;-</span> emotions[, <span class="dv">3</span><span class="sc">:</span><span class="fu">length</span>(emotions)]</span>
+<span id="cb8-37"><a href="#cb8-37" aria-hidden="true" tabindex="-1"></a>Data was then imported:</span>
+<span id="cb8-38"><a href="#cb8-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-39"><a href="#cb8-39" aria-hidden="true" tabindex="-1"></a><span class="in">```{r,echo=FALSE}</span></span>
+<span id="cb8-40"><a href="#cb8-40" aria-hidden="true" tabindex="-1"></a><span class="in">emotions &lt;- read_csv("generated_data/cleaned/emotions.csv")</span></span>
+<span id="cb8-41"><a href="#cb8-41" aria-hidden="true" tabindex="-1"></a><span class="in"># remove first two columns, keep all others</span></span>
+<span id="cb8-42"><a href="#cb8-42" aria-hidden="true" tabindex="-1"></a><span class="in">emotions &lt;- emotions[, 3:length(emotions)]</span></span>
 <span id="cb8-43"><a href="#cb8-43" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb8-44"><a href="#cb8-44" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-45"><a href="#cb8-45" aria-hidden="true" tabindex="-1"></a><span class="fu">## Data pre-processing</span></span>
@@ -4053,7 +4073,22 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 <span id="cb8-299"><a href="#cb8-299" aria-hidden="true" tabindex="-1"></a>    <span class="ex">factgenie</span> run <span class="at">--host</span><span class="op">=</span>127.0.0.1 <span class="at">--port</span> 8890</span>
 <span id="cb8-300"><a href="#cb8-300" aria-hidden="true" tabindex="-1"></a>    <span class="in">```</span></span>
 <span id="cb8-301"><a href="#cb8-301" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-302"><a href="#cb8-302" aria-hidden="true" tabindex="-1"></a>    When inside the app we imported the</span>
+<span id="cb8-302"><a href="#cb8-302" aria-hidden="true" tabindex="-1"></a>    When inside the app we imported the data as instructed in the app setup by separating instances of prompts used to generate the texts from the outputs (i.e., the two <span class="in">`.jsonl`</span> files generated in step 2.</span>
+<span id="cb8-303"><a href="#cb8-303" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-304"><a href="#cb8-304" aria-hidden="true" tabindex="-1"></a>*Gemma3* wrote the annotations and showed that only 5 texts out of 590 showed semantical inconsistencies. The results are available in the <span class="in">`llm-eval-gemini27B.csv`</span> file.</span>
+<span id="cb8-305"><a href="#cb8-305" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-306"><a href="#cb8-306" aria-hidden="true" tabindex="-1"></a><span class="in">```{r, results='hide'}</span></span>
+<span id="cb8-307"><a href="#cb8-307" aria-hidden="true" tabindex="-1"></a><span class="in">llm_eval_gemini27B &lt;- read_csv("generated_data/llm-evals/llm-eval-gemini27B.csv")</span></span>
+<span id="cb8-308"><a href="#cb8-308" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb8-309"><a href="#cb8-309" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-310"><a href="#cb8-310" aria-hidden="true" tabindex="-1"></a><span class="in">```{r, echo=FALSE}</span></span>
+<span id="cb8-311"><a href="#cb8-311" aria-hidden="true" tabindex="-1"></a><span class="in">ggplot(llm_eval_gemini27B, aes(x = Category, y = Count, fill = Category)) +</span></span>
+<span id="cb8-312"><a href="#cb8-312" aria-hidden="true" tabindex="-1"></a><span class="in">  geom_col() +</span></span>
+<span id="cb8-313"><a href="#cb8-313" aria-hidden="true" tabindex="-1"></a><span class="in">  labs(title = "# of Inconsistencies Found (out of 590 rated texts)") +</span></span>
+<span id="cb8-314"><a href="#cb8-314" aria-hidden="true" tabindex="-1"></a><span class="in">  theme(plot.title = element_text(hjust = 0.5),</span></span>
+<span id="cb8-315"><a href="#cb8-315" aria-hidden="true" tabindex="-1"></a><span class="in">        axis.text.x = element_blank(),</span></span>
+<span id="cb8-316"><a href="#cb8-316" aria-hidden="true" tabindex="-1"></a><span class="in">        axis.title.x = element_blank())</span></span>
+<span id="cb8-317"><a href="#cb8-317" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 </code><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></pre></div>
 </div></div></div></div></div>
 </div> <!-- /content -->

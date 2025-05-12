@@ -1,5 +1,5 @@
 library(pacman)
-p_load(tidyverse, ggplot2, readr, janitor, psych, ggthemes, car, stringr ,rstatix, patchwork, gridExtra)
+p_load(tidyverse, ggplot2, readr, janitor, psych, ggthemes, car, stringr ,rstatix, patchwork, gridExtra, fmsb)
 
 theme_set(theme_clean())
 
@@ -267,4 +267,58 @@ emotions %>%
 # it seems apparent that even when instructed to output a text with a sad tone very few texts appear to be able to do so
 # indeed most of the texts seem to just output a joyful tone regardless of the type of prompt they have been supplied with
 
+emotions_reduced <- emotions %>% 
+  select(type_of_prompt, anger, trust, surprise, disgust, joy, sadness, fear, anticipation) %>% 
+  group_by(type_of_prompt) %>% 
+  summarise(across(everything(), mean))
 
+
+# Step 2: Convert to data frame for radar chart
+# Drop the 'type_of_prompt' column and make it numeric
+radar_data <- as.data.frame(emotions_reduced[,-1])
+rownames(radar_data) <- emotions_reduced$type_of_prompt
+
+# Step 3: Add max and min rows (required for radarchart)
+radar_data <- rbind(
+  rep(4, ncol(radar_data)),    # max values
+  rep(-4, ncol(radar_data)),   # min values
+  radar_data                   # actual values
+)
+
+# Convert only the data rows (excluding first 2 rows) to a numeric matrix
+data_matrix <- as.matrix(radar_data[-c(1, 2), ])
+
+# Compute global max and min values
+max_val <- ceiling(max(data_matrix, na.rm = TRUE))
+min_val <- floor(min(data_matrix, na.rm = TRUE))
+
+radar_data_scaled <- rbind(
+  rep(max_val, ncol(data_matrix)),    
+  rep(min_val, ncol(data_matrix)),   
+  data_matrix
+)
+
+# Restore original column names and optionally rownames
+colnames(radar_data_scaled) <- colnames(radar_data)
+rownames(radar_data_scaled) <- c("Max", "Min", rownames(radar_data)[-c(1, 2)])
+
+# png("radar_chart.png", width = 1500, height = 1500, res = 300)
+radarchart(as.data.frame(radar_data_scaled),
+           axistype = 0,  # Changed from 1 to 2
+           vlcex = 1,   # Added axis label size
+           pcol = c("blue", "red"),
+           plwd = 2,
+           plty = 1,
+           title = "Average Emotional Profiles by Prompt Group",
+           cglcol = "grey",
+           cglty = 1,
+           axislabcol = "black",
+           caxislabels = seq(min_val, max_val, by = 1),
+           calcex = 0.8,
+           cglwd = 0.8,
+           maxmin = TRUE)
+# dev.off()
+
+
+legend("topright", legend = rownames(radar_data_scaled)[3:nrow(radar_data_scaled)],
+       col = c("blue", "red"), lty = 1, lwd = 2)
