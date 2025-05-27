@@ -25,8 +25,8 @@ Instructions for annotating the text:
 
 Output the errors as a JSON list "annotations" in which each object contains fields "reason", "text", and "annotation_type". The value of "reason" is the reason for the annotation. The value of "text" is the literal value of the text inside the highlighted span, so that the span can later be identified using string matching. The value of "annotation_type" is an integer index of the error based on the following list:
 
-0: semantic (does the text make sense semantically?)
-1: logical (does the text make sense logically?)
-2: grammatical (is the text written in a grammatically correct way?)
+- 0: semantic (does the text make sense semantically?)
+- 1: logical (does the text make sense logically?)
+- 2: grammatical (is the text written in a grammatically correct way?)
 
 The list should be sorted by the position of the error in the text. Make sure that the annotations are not overlapping.
