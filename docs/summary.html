@@ -160,7 +160,57 @@ window.Quarto = {
 </section>
 <section id="generating-data" class="level1" data-number="2">
 <h1 data-number="2"><span class="header-section-number">2</span> Generating data</h1>
-<p>Data for this experiment was produced in two steps. During the first iteration, carried out calling the API remotely, we asked the API to produce the entire sample of data (around 600 texts, 200 for each temperature level selected). However, we noticed that most of the texts produced with the highest temperature (1.3) were not usable and after cleaning them (in Python using the <code>clean_data.py</code> script) we had to rebalance the groups and adjust for the dropped texts from the highest temperature group. To this end, the second iteration of the text generation happened. This time, however, the same Mistral model was run locally using the framework provided by <code>ollama</code> and exploiting the connection to the locally hosted API. The texts produced in this fashion passed all cleaning tests and were included in the final dataset by running the <code>clean_data.py</code> script and saving the final merged dataset in <code>.csv</code> format. The last step was to compute <span class="math inline">\(z\)</span>-scores for each emotion embedded in the generated texts using the <code>create_emotions.py</code> script. The final dataset (<code>emotions.csv)</code> was then saved and was used for the subsequent analyses. After performing this step, no more data cleaning was needed.</p>
+<p>Data for this experiment was produced in two steps. During the first iteration, carried out calling the API remotely, we asked the API to produce the entire sample of data (around 600 texts, 200 for each temperature level selected). However, we noticed that most of the texts produced with the highest temperature (1.3) were not usable and after cleaning them (in Python using the <code>clean_data.py</code> script) we had to rebalance the groups and adjust for the dropped texts from the highest temperature group.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">#! clean_data.py</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># function used to clean the data</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> clean_df(df: pd.DataFrame) <span class="op">-&gt;</span> pd.DataFrame:</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="co"># make text lowercase</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    df[<span class="st">'text_lower'</span>] <span class="op">=</span> df[<span class="st">'text'</span>].<span class="bu">str</span>.lower()</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="co"># drop if text is shorter than 500 characters</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    min_length <span class="op">=</span> df[<span class="st">'text_lower'</span>].<span class="bu">str</span>.<span class="bu">len</span>() <span class="op">&gt;=</span> <span class="dv">500</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="co"># check if text starts with parenthesis</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    parenthesis <span class="op">=</span> df[<span class="st">'text_lower'</span>].<span class="bu">str</span>.startswith(<span class="st">'('</span>)</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    <span class="co"># check if non ascii letters are used</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    non_ascii_mask <span class="op">=</span> df[<span class="st">'text'</span>].<span class="bu">apply</span>(<span class="kw">lambda</span> x: <span class="kw">not</span> <span class="bu">all</span>(<span class="bu">ord</span>(char) <span class="op">&lt;</span> <span class="dv">128</span> <span class="cf">for</span> char <span class="kw">in</span> <span class="bu">str</span>(x)))</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    df_cleaned <span class="op">=</span> df[(<span class="op">~</span>parenthesis) <span class="op">&amp;</span> (<span class="op">~</span>non_ascii_mask) <span class="op">&amp;</span> (min_length)]</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> df_cleaned</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>To this end, the second iteration of the text generation happened. This time, however, the same Mistral model was run locally using the framework provided by <code>ollama</code> and exploiting the connection to the locally hosted API. The texts produced in this fashion passed all cleaning tests and were included in the final dataset by running the <code>clean_data.py</code> script and saving the final merged dataset in <code>.csv</code> format. The last step was to compute <span class="math inline">\(z\)</span>-scores for each emotion embedded in the generated texts using the <code>create_emotions_df.py</code> script. The final dataset (<code>emotions.csv)</code> was then saved and was used for the subsequent analyses. After performing this step, no more data cleaning was needed.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> emoatlas <span class="im">import</span> EmoScores</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># compute emotion scores</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> compute_scores(df: pd.DataFrame, n <span class="op">=</span> <span class="op">-</span><span class="dv">1</span>):</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    emos <span class="op">=</span> EmoScores()</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="co"># initialize empty dictionary to store the scores</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    dct <span class="op">=</span> {</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>      <span class="st">'anger'</span> : <span class="bu">list</span>(),</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>      <span class="st">'trust'</span> : <span class="bu">list</span>(),</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>      <span class="st">'surprise'</span> : <span class="bu">list</span>(), </span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>      <span class="st">'disgust'</span> : <span class="bu">list</span>(),</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>      <span class="st">'joy'</span> : <span class="bu">list</span>(),</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>      <span class="st">'sadness'</span> : <span class="bu">list</span>(),</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>      <span class="st">'fear'</span> : <span class="bu">list</span>(),</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>      <span class="st">'anticipation'</span> : <span class="bu">list</span>()</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    <span class="co"># compute score for each text in the df</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(df)):</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>        text <span class="op">=</span> df[<span class="st">'text'</span>].iloc[i]</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>        <span class="co"># compute emotional scores using EmoAtlas</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>        scores <span class="op">=</span> emos.zscores(text)</span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>        <span class="co"># append to each emotion the score for the current text</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> k <span class="kw">in</span> scores:</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>            dct[k].append(scores[k])</span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> dct</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="experiment-1---statistical-analysis" class="level1" data-number="3">
 <h1 data-number="3"><span class="header-section-number">3</span> Experiment 1 - Statistical Analysis</h1>
@@ -168,24 +218,19 @@ window.Quarto = {
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(pacman)</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">p_load</span>(tidyverse, ggplot2, readr, janitor, psych, ggthemes, car, stringr ,rstatix, patchwork, gridExtra, gt)</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">theme_set</span>(<span class="fu">theme_minimal</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(pacman)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">p_load</span>(tidyverse, ggplot2, readr, janitor, psych, ggthemes, car, stringr ,rstatix, patchwork, gridExtra, gt)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">theme_set</span>(<span class="fu">theme_minimal</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <p>Data was then imported:</p>
 <div class="cell">
-<div class="cell-output cell-output-stderr">
-<pre><code>New names:
-Rows: 590 Columns: 13
-── Column specification
-──────────────────────────────────────────────────────── Delimiter: "," chr
-(2): type of prompt, text dbl (11): ...1, Unnamed: 0, temperature, anger,
-trust, surprise, disgust, jo...
-ℹ Use `spec()` to retrieve the full column specification for this data. ℹ
-Specify the column types or set `show_col_types = FALSE` to quiet this message.
-• `` -&gt; `...1`</code></pre>
-</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>emotions <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"generated_data/cleaned/emotions.csv"</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co"># remove first two columns, keep all others</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>emotions <span class="ot">&lt;-</span> emotions[, <span class="dv">3</span><span class="sc">:</span><span class="fu">length</span>(emotions)]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <section id="data-pre-processing" class="level2" data-number="3.1">
 <h2 data-number="3.1" class="anchored" data-anchor-id="data-pre-processing"><span class="header-section-number">3.1</span> Data pre-processing</h2>
@@ -194,8 +239,8 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># check summary statistics by condition</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">describeBy</span>(emotions <span class="sc">~</span> condition)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># check summary statistics by condition</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">describeBy</span>(emotions <span class="sc">~</span> condition)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 </section>
@@ -210,23 +255,23 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
 <p>Below follows a summary of the results from the tests:</p>
 <div class="cell">
 <div class="cell-output-display">
-<div id="wpdhrulrbh" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
-<style>#wpdhrulrbh table {
+<div id="envozezhmi" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#envozezhmi table {
   font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-#wpdhrulrbh thead, #wpdhrulrbh tbody, #wpdhrulrbh tfoot, #wpdhrulrbh tr, #wpdhrulrbh td, #wpdhrulrbh th {
+#envozezhmi thead, #envozezhmi tbody, #envozezhmi tfoot, #envozezhmi tr, #envozezhmi td, #envozezhmi th {
   border-style: none;
 }
 
-#wpdhrulrbh p {
+#envozezhmi p {
   margin: 0;
   padding: 0;
 }
 
-#wpdhrulrbh .gt_table {
+#envozezhmi .gt_table {
   display: table;
   border-collapse: collapse;
   line-height: normal;
@@ -252,12 +297,12 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-left-color: #D3D3D3;
 }
 
-#wpdhrulrbh .gt_caption {
+#envozezhmi .gt_caption {
   padding-top: 4px;
   padding-bottom: 4px;
 }
 
-#wpdhrulrbh .gt_title {
+#envozezhmi .gt_title {
   color: #333333;
   font-size: 125%;
   font-weight: initial;
@@ -269,7 +314,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-bottom-width: 0;
 }
 
-#wpdhrulrbh .gt_subtitle {
+#envozezhmi .gt_subtitle {
   color: #333333;
   font-size: 85%;
   font-weight: initial;
@@ -281,7 +326,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-top-width: 0;
 }
 
-#wpdhrulrbh .gt_heading {
+#envozezhmi .gt_heading {
   background-color: #FFFFFF;
   text-align: center;
   border-bottom-color: #FFFFFF;
@@ -293,13 +338,13 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-right-color: #D3D3D3;
 }
 
-#wpdhrulrbh .gt_bottom_border {
+#envozezhmi .gt_bottom_border {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
 }
 
-#wpdhrulrbh .gt_col_headings {
+#envozezhmi .gt_col_headings {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -314,7 +359,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-right-color: #D3D3D3;
 }
 
-#wpdhrulrbh .gt_col_heading {
+#envozezhmi .gt_col_heading {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -334,7 +379,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   overflow-x: hidden;
 }
 
-#wpdhrulrbh .gt_column_spanner_outer {
+#envozezhmi .gt_column_spanner_outer {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -346,15 +391,15 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   padding-right: 4px;
 }
 
-#wpdhrulrbh .gt_column_spanner_outer:first-child {
+#envozezhmi .gt_column_spanner_outer:first-child {
   padding-left: 0;
 }
 
-#wpdhrulrbh .gt_column_spanner_outer:last-child {
+#envozezhmi .gt_column_spanner_outer:last-child {
   padding-right: 0;
 }
 
-#wpdhrulrbh .gt_column_spanner {
+#envozezhmi .gt_column_spanner {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
@@ -366,11 +411,11 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   width: 100%;
 }
 
-#wpdhrulrbh .gt_spanner_row {
+#envozezhmi .gt_spanner_row {
   border-bottom-style: hidden;
 }
 
-#wpdhrulrbh .gt_group_heading {
+#envozezhmi .gt_group_heading {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -396,7 +441,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   text-align: left;
 }
 
-#wpdhrulrbh .gt_empty_group_heading {
+#envozezhmi .gt_empty_group_heading {
   padding: 0.5px;
   color: #333333;
   background-color: #FFFFFF;
@@ -411,15 +456,15 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   vertical-align: middle;
 }
 
-#wpdhrulrbh .gt_from_md > :first-child {
+#envozezhmi .gt_from_md > :first-child {
   margin-top: 0;
 }
 
-#wpdhrulrbh .gt_from_md > :last-child {
+#envozezhmi .gt_from_md > :last-child {
   margin-bottom: 0;
 }
 
-#wpdhrulrbh .gt_row {
+#envozezhmi .gt_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -438,7 +483,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   overflow-x: hidden;
 }
 
-#wpdhrulrbh .gt_stub {
+#envozezhmi .gt_stub {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -451,7 +496,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   padding-right: 5px;
 }
 
-#wpdhrulrbh .gt_stub_row_group {
+#envozezhmi .gt_stub_row_group {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -465,15 +510,15 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   vertical-align: top;
 }
 
-#wpdhrulrbh .gt_row_group_first td {
+#envozezhmi .gt_row_group_first td {
   border-top-width: 2px;
 }
 
-#wpdhrulrbh .gt_row_group_first th {
+#envozezhmi .gt_row_group_first th {
   border-top-width: 2px;
 }
 
-#wpdhrulrbh .gt_summary_row {
+#envozezhmi .gt_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -483,16 +528,16 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   padding-right: 5px;
 }
 
-#wpdhrulrbh .gt_first_summary_row {
+#envozezhmi .gt_first_summary_row {
   border-top-style: solid;
   border-top-color: #D3D3D3;
 }
 
-#wpdhrulrbh .gt_first_summary_row.thick {
+#envozezhmi .gt_first_summary_row.thick {
   border-top-width: 2px;
 }
 
-#wpdhrulrbh .gt_last_summary_row {
+#envozezhmi .gt_last_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -502,7 +547,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-bottom-color: #D3D3D3;
 }
 
-#wpdhrulrbh .gt_grand_summary_row {
+#envozezhmi .gt_grand_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -512,7 +557,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   padding-right: 5px;
 }
 
-#wpdhrulrbh .gt_first_grand_summary_row {
+#envozezhmi .gt_first_grand_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -522,7 +567,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-top-color: #D3D3D3;
 }
 
-#wpdhrulrbh .gt_last_grand_summary_row_top {
+#envozezhmi .gt_last_grand_summary_row_top {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -532,11 +577,11 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-bottom-color: #D3D3D3;
 }
 
-#wpdhrulrbh .gt_striped {
+#envozezhmi .gt_striped {
   background-color: rgba(128, 128, 128, 0.05);
 }
 
-#wpdhrulrbh .gt_table_body {
+#envozezhmi .gt_table_body {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -545,7 +590,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-bottom-color: #D3D3D3;
 }
 
-#wpdhrulrbh .gt_footnotes {
+#envozezhmi .gt_footnotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -559,7 +604,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-right-color: #D3D3D3;
 }
 
-#wpdhrulrbh .gt_footnote {
+#envozezhmi .gt_footnote {
   margin: 0px;
   font-size: 90%;
   padding-top: 4px;
@@ -568,7 +613,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   padding-right: 5px;
 }
 
-#wpdhrulrbh .gt_sourcenotes {
+#envozezhmi .gt_sourcenotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -582,7 +627,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-right-color: #D3D3D3;
 }
 
-#wpdhrulrbh .gt_sourcenote {
+#envozezhmi .gt_sourcenote {
   font-size: 90%;
   padding-top: 4px;
   padding-bottom: 4px;
@@ -590,72 +635,72 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   padding-right: 5px;
 }
 
-#wpdhrulrbh .gt_left {
+#envozezhmi .gt_left {
   text-align: left;
 }
 
-#wpdhrulrbh .gt_center {
+#envozezhmi .gt_center {
   text-align: center;
 }
 
-#wpdhrulrbh .gt_right {
+#envozezhmi .gt_right {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-#wpdhrulrbh .gt_font_normal {
+#envozezhmi .gt_font_normal {
   font-weight: normal;
 }
 
-#wpdhrulrbh .gt_font_bold {
+#envozezhmi .gt_font_bold {
   font-weight: bold;
 }
 
-#wpdhrulrbh .gt_font_italic {
+#envozezhmi .gt_font_italic {
   font-style: italic;
 }
 
-#wpdhrulrbh .gt_super {
+#envozezhmi .gt_super {
   font-size: 65%;
 }
 
-#wpdhrulrbh .gt_footnote_marks {
+#envozezhmi .gt_footnote_marks {
   font-size: 75%;
   vertical-align: 0.4em;
   position: initial;
 }
 
-#wpdhrulrbh .gt_asterisk {
+#envozezhmi .gt_asterisk {
   font-size: 100%;
   vertical-align: 0;
 }
 
-#wpdhrulrbh .gt_indent_1 {
+#envozezhmi .gt_indent_1 {
   text-indent: 5px;
 }
 
-#wpdhrulrbh .gt_indent_2 {
+#envozezhmi .gt_indent_2 {
   text-indent: 10px;
 }
 
-#wpdhrulrbh .gt_indent_3 {
+#envozezhmi .gt_indent_3 {
   text-indent: 15px;
 }
 
-#wpdhrulrbh .gt_indent_4 {
+#envozezhmi .gt_indent_4 {
   text-indent: 20px;
 }
 
-#wpdhrulrbh .gt_indent_5 {
+#envozezhmi .gt_indent_5 {
   text-indent: 25px;
 }
 
-#wpdhrulrbh .katex-display {
+#envozezhmi .katex-display {
   display: inline-flex !important;
   margin-bottom: 0.75em !important;
 }
 
-#wpdhrulrbh div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+#envozezhmi div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
   height: 0px !important;
 }
 </style>
@@ -747,23 +792,23 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
 </div>
 <div class="cell">
 <div class="cell-output-display">
-<div id="vxdnpfkwam" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
-<style>#vxdnpfkwam table {
+<div id="chhhhfpnub" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#chhhhfpnub table {
   font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-#vxdnpfkwam thead, #vxdnpfkwam tbody, #vxdnpfkwam tfoot, #vxdnpfkwam tr, #vxdnpfkwam td, #vxdnpfkwam th {
+#chhhhfpnub thead, #chhhhfpnub tbody, #chhhhfpnub tfoot, #chhhhfpnub tr, #chhhhfpnub td, #chhhhfpnub th {
   border-style: none;
 }
 
-#vxdnpfkwam p {
+#chhhhfpnub p {
   margin: 0;
   padding: 0;
 }
 
-#vxdnpfkwam .gt_table {
+#chhhhfpnub .gt_table {
   display: table;
   border-collapse: collapse;
   line-height: normal;
@@ -789,12 +834,12 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-left-color: #D3D3D3;
 }
 
-#vxdnpfkwam .gt_caption {
+#chhhhfpnub .gt_caption {
   padding-top: 4px;
   padding-bottom: 4px;
 }
 
-#vxdnpfkwam .gt_title {
+#chhhhfpnub .gt_title {
   color: #333333;
   font-size: 125%;
   font-weight: initial;
@@ -806,7 +851,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-bottom-width: 0;
 }
 
-#vxdnpfkwam .gt_subtitle {
+#chhhhfpnub .gt_subtitle {
   color: #333333;
   font-size: 85%;
   font-weight: initial;
@@ -818,7 +863,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-top-width: 0;
 }
 
-#vxdnpfkwam .gt_heading {
+#chhhhfpnub .gt_heading {
   background-color: #FFFFFF;
   text-align: center;
   border-bottom-color: #FFFFFF;
@@ -830,13 +875,13 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-right-color: #D3D3D3;
 }
 
-#vxdnpfkwam .gt_bottom_border {
+#chhhhfpnub .gt_bottom_border {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
 }
 
-#vxdnpfkwam .gt_col_headings {
+#chhhhfpnub .gt_col_headings {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -851,7 +896,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-right-color: #D3D3D3;
 }
 
-#vxdnpfkwam .gt_col_heading {
+#chhhhfpnub .gt_col_heading {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -871,7 +916,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   overflow-x: hidden;
 }
 
-#vxdnpfkwam .gt_column_spanner_outer {
+#chhhhfpnub .gt_column_spanner_outer {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -883,15 +928,15 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   padding-right: 4px;
 }
 
-#vxdnpfkwam .gt_column_spanner_outer:first-child {
+#chhhhfpnub .gt_column_spanner_outer:first-child {
   padding-left: 0;
 }
 
-#vxdnpfkwam .gt_column_spanner_outer:last-child {
+#chhhhfpnub .gt_column_spanner_outer:last-child {
   padding-right: 0;
 }
 
-#vxdnpfkwam .gt_column_spanner {
+#chhhhfpnub .gt_column_spanner {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
@@ -903,11 +948,11 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   width: 100%;
 }
 
-#vxdnpfkwam .gt_spanner_row {
+#chhhhfpnub .gt_spanner_row {
   border-bottom-style: hidden;
 }
 
-#vxdnpfkwam .gt_group_heading {
+#chhhhfpnub .gt_group_heading {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -933,7 +978,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   text-align: left;
 }
 
-#vxdnpfkwam .gt_empty_group_heading {
+#chhhhfpnub .gt_empty_group_heading {
   padding: 0.5px;
   color: #333333;
   background-color: #FFFFFF;
@@ -948,15 +993,15 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   vertical-align: middle;
 }
 
-#vxdnpfkwam .gt_from_md > :first-child {
+#chhhhfpnub .gt_from_md > :first-child {
   margin-top: 0;
 }
 
-#vxdnpfkwam .gt_from_md > :last-child {
+#chhhhfpnub .gt_from_md > :last-child {
   margin-bottom: 0;
 }
 
-#vxdnpfkwam .gt_row {
+#chhhhfpnub .gt_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -975,7 +1020,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   overflow-x: hidden;
 }
 
-#vxdnpfkwam .gt_stub {
+#chhhhfpnub .gt_stub {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -988,7 +1033,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   padding-right: 5px;
 }
 
-#vxdnpfkwam .gt_stub_row_group {
+#chhhhfpnub .gt_stub_row_group {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1002,15 +1047,15 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   vertical-align: top;
 }
 
-#vxdnpfkwam .gt_row_group_first td {
+#chhhhfpnub .gt_row_group_first td {
   border-top-width: 2px;
 }
 
-#vxdnpfkwam .gt_row_group_first th {
+#chhhhfpnub .gt_row_group_first th {
   border-top-width: 2px;
 }
 
-#vxdnpfkwam .gt_summary_row {
+#chhhhfpnub .gt_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -1020,16 +1065,16 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   padding-right: 5px;
 }
 
-#vxdnpfkwam .gt_first_summary_row {
+#chhhhfpnub .gt_first_summary_row {
   border-top-style: solid;
   border-top-color: #D3D3D3;
 }
 
-#vxdnpfkwam .gt_first_summary_row.thick {
+#chhhhfpnub .gt_first_summary_row.thick {
   border-top-width: 2px;
 }
 
-#vxdnpfkwam .gt_last_summary_row {
+#chhhhfpnub .gt_last_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1039,7 +1084,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-bottom-color: #D3D3D3;
 }
 
-#vxdnpfkwam .gt_grand_summary_row {
+#chhhhfpnub .gt_grand_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -1049,7 +1094,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   padding-right: 5px;
 }
 
-#vxdnpfkwam .gt_first_grand_summary_row {
+#chhhhfpnub .gt_first_grand_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1059,7 +1104,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-top-color: #D3D3D3;
 }
 
-#vxdnpfkwam .gt_last_grand_summary_row_top {
+#chhhhfpnub .gt_last_grand_summary_row_top {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1069,11 +1114,11 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-bottom-color: #D3D3D3;
 }
 
-#vxdnpfkwam .gt_striped {
+#chhhhfpnub .gt_striped {
   background-color: rgba(128, 128, 128, 0.05);
 }
 
-#vxdnpfkwam .gt_table_body {
+#chhhhfpnub .gt_table_body {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -1082,7 +1127,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-bottom-color: #D3D3D3;
 }
 
-#vxdnpfkwam .gt_footnotes {
+#chhhhfpnub .gt_footnotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -1096,7 +1141,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-right-color: #D3D3D3;
 }
 
-#vxdnpfkwam .gt_footnote {
+#chhhhfpnub .gt_footnote {
   margin: 0px;
   font-size: 90%;
   padding-top: 4px;
@@ -1105,7 +1150,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   padding-right: 5px;
 }
 
-#vxdnpfkwam .gt_sourcenotes {
+#chhhhfpnub .gt_sourcenotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -1119,7 +1164,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-right-color: #D3D3D3;
 }
 
-#vxdnpfkwam .gt_sourcenote {
+#chhhhfpnub .gt_sourcenote {
   font-size: 90%;
   padding-top: 4px;
   padding-bottom: 4px;
@@ -1127,72 +1172,72 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   padding-right: 5px;
 }
 
-#vxdnpfkwam .gt_left {
+#chhhhfpnub .gt_left {
   text-align: left;
 }
 
-#vxdnpfkwam .gt_center {
+#chhhhfpnub .gt_center {
   text-align: center;
 }
 
-#vxdnpfkwam .gt_right {
+#chhhhfpnub .gt_right {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-#vxdnpfkwam .gt_font_normal {
+#chhhhfpnub .gt_font_normal {
   font-weight: normal;
 }
 
-#vxdnpfkwam .gt_font_bold {
+#chhhhfpnub .gt_font_bold {
   font-weight: bold;
 }
 
-#vxdnpfkwam .gt_font_italic {
+#chhhhfpnub .gt_font_italic {
   font-style: italic;
 }
 
-#vxdnpfkwam .gt_super {
+#chhhhfpnub .gt_super {
   font-size: 65%;
 }
 
-#vxdnpfkwam .gt_footnote_marks {
+#chhhhfpnub .gt_footnote_marks {
   font-size: 75%;
   vertical-align: 0.4em;
   position: initial;
 }
 
-#vxdnpfkwam .gt_asterisk {
+#chhhhfpnub .gt_asterisk {
   font-size: 100%;
   vertical-align: 0;
 }
 
-#vxdnpfkwam .gt_indent_1 {
+#chhhhfpnub .gt_indent_1 {
   text-indent: 5px;
 }
 
-#vxdnpfkwam .gt_indent_2 {
+#chhhhfpnub .gt_indent_2 {
   text-indent: 10px;
 }
 
-#vxdnpfkwam .gt_indent_3 {
+#chhhhfpnub .gt_indent_3 {
   text-indent: 15px;
 }
 
-#vxdnpfkwam .gt_indent_4 {
+#chhhhfpnub .gt_indent_4 {
   text-indent: 20px;
 }
 
-#vxdnpfkwam .gt_indent_5 {
+#chhhhfpnub .gt_indent_5 {
   text-indent: 25px;
 }
 
-#vxdnpfkwam .katex-display {
+#chhhhfpnub .katex-display {
   display: inline-flex !important;
   margin-bottom: 0.75em !important;
 }
 
-#vxdnpfkwam div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+#chhhhfpnub div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
   height: 0px !important;
 }
 </style>
@@ -1504,30 +1549,30 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
 </div>
 </div>
 </div>
-<p>As it is possible to observe these departures from the assumptions, make it necessary to use non-parametric alternatives to the ANOVA test.</p>
+<p>As it is possible to observe these departures from the assumptions it becomes necessary to use non-parametric alternatives to the ANOVA test.</p>
 </section>
 <section id="kruskal-wallis-test" class="level2" data-number="3.3">
 <h2 data-number="3.3" class="anchored" data-anchor-id="kruskal-wallis-test"><span class="header-section-number">3.3</span> Kruskal-Wallis Test</h2>
 <p>This is an alternative to the ANOVA test and can be used for this specific dataset. As in the ANOVA test if the null hypothesis is rejected, then we know at least one group is different on average compared to another. The results for this test are reported below.</p>
 <div class="cell">
 <div class="cell-output-display">
-<div id="buhgtrlwnc" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
-<style>#buhgtrlwnc table {
+<div id="okzyvexexs" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#okzyvexexs table {
   font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-#buhgtrlwnc thead, #buhgtrlwnc tbody, #buhgtrlwnc tfoot, #buhgtrlwnc tr, #buhgtrlwnc td, #buhgtrlwnc th {
+#okzyvexexs thead, #okzyvexexs tbody, #okzyvexexs tfoot, #okzyvexexs tr, #okzyvexexs td, #okzyvexexs th {
   border-style: none;
 }
 
-#buhgtrlwnc p {
+#okzyvexexs p {
   margin: 0;
   padding: 0;
 }
 
-#buhgtrlwnc .gt_table {
+#okzyvexexs .gt_table {
   display: table;
   border-collapse: collapse;
   line-height: normal;
@@ -1553,12 +1598,12 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-left-color: #D3D3D3;
 }
 
-#buhgtrlwnc .gt_caption {
+#okzyvexexs .gt_caption {
   padding-top: 4px;
   padding-bottom: 4px;
 }
 
-#buhgtrlwnc .gt_title {
+#okzyvexexs .gt_title {
   color: #333333;
   font-size: 125%;
   font-weight: initial;
@@ -1570,7 +1615,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-bottom-width: 0;
 }
 
-#buhgtrlwnc .gt_subtitle {
+#okzyvexexs .gt_subtitle {
   color: #333333;
   font-size: 85%;
   font-weight: initial;
@@ -1582,7 +1627,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-top-width: 0;
 }
 
-#buhgtrlwnc .gt_heading {
+#okzyvexexs .gt_heading {
   background-color: #FFFFFF;
   text-align: center;
   border-bottom-color: #FFFFFF;
@@ -1594,13 +1639,13 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-right-color: #D3D3D3;
 }
 
-#buhgtrlwnc .gt_bottom_border {
+#okzyvexexs .gt_bottom_border {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
 }
 
-#buhgtrlwnc .gt_col_headings {
+#okzyvexexs .gt_col_headings {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -1615,7 +1660,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-right-color: #D3D3D3;
 }
 
-#buhgtrlwnc .gt_col_heading {
+#okzyvexexs .gt_col_heading {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1635,7 +1680,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   overflow-x: hidden;
 }
 
-#buhgtrlwnc .gt_column_spanner_outer {
+#okzyvexexs .gt_column_spanner_outer {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1647,15 +1692,15 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   padding-right: 4px;
 }
 
-#buhgtrlwnc .gt_column_spanner_outer:first-child {
+#okzyvexexs .gt_column_spanner_outer:first-child {
   padding-left: 0;
 }
 
-#buhgtrlwnc .gt_column_spanner_outer:last-child {
+#okzyvexexs .gt_column_spanner_outer:last-child {
   padding-right: 0;
 }
 
-#buhgtrlwnc .gt_column_spanner {
+#okzyvexexs .gt_column_spanner {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
@@ -1667,11 +1712,11 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   width: 100%;
 }
 
-#buhgtrlwnc .gt_spanner_row {
+#okzyvexexs .gt_spanner_row {
   border-bottom-style: hidden;
 }
 
-#buhgtrlwnc .gt_group_heading {
+#okzyvexexs .gt_group_heading {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1697,7 +1742,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   text-align: left;
 }
 
-#buhgtrlwnc .gt_empty_group_heading {
+#okzyvexexs .gt_empty_group_heading {
   padding: 0.5px;
   color: #333333;
   background-color: #FFFFFF;
@@ -1712,15 +1757,15 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   vertical-align: middle;
 }
 
-#buhgtrlwnc .gt_from_md > :first-child {
+#okzyvexexs .gt_from_md > :first-child {
   margin-top: 0;
 }
 
-#buhgtrlwnc .gt_from_md > :last-child {
+#okzyvexexs .gt_from_md > :last-child {
   margin-bottom: 0;
 }
 
-#buhgtrlwnc .gt_row {
+#okzyvexexs .gt_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1739,7 +1784,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   overflow-x: hidden;
 }
 
-#buhgtrlwnc .gt_stub {
+#okzyvexexs .gt_stub {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1752,7 +1797,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   padding-right: 5px;
 }
 
-#buhgtrlwnc .gt_stub_row_group {
+#okzyvexexs .gt_stub_row_group {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1766,15 +1811,15 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   vertical-align: top;
 }
 
-#buhgtrlwnc .gt_row_group_first td {
+#okzyvexexs .gt_row_group_first td {
   border-top-width: 2px;
 }
 
-#buhgtrlwnc .gt_row_group_first th {
+#okzyvexexs .gt_row_group_first th {
   border-top-width: 2px;
 }
 
-#buhgtrlwnc .gt_summary_row {
+#okzyvexexs .gt_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -1784,16 +1829,16 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   padding-right: 5px;
 }
 
-#buhgtrlwnc .gt_first_summary_row {
+#okzyvexexs .gt_first_summary_row {
   border-top-style: solid;
   border-top-color: #D3D3D3;
 }
 
-#buhgtrlwnc .gt_first_summary_row.thick {
+#okzyvexexs .gt_first_summary_row.thick {
   border-top-width: 2px;
 }
 
-#buhgtrlwnc .gt_last_summary_row {
+#okzyvexexs .gt_last_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1803,7 +1848,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-bottom-color: #D3D3D3;
 }
 
-#buhgtrlwnc .gt_grand_summary_row {
+#okzyvexexs .gt_grand_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -1813,7 +1858,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   padding-right: 5px;
 }
 
-#buhgtrlwnc .gt_first_grand_summary_row {
+#okzyvexexs .gt_first_grand_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1823,7 +1868,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-top-color: #D3D3D3;
 }
 
-#buhgtrlwnc .gt_last_grand_summary_row_top {
+#okzyvexexs .gt_last_grand_summary_row_top {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1833,11 +1878,11 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-bottom-color: #D3D3D3;
 }
 
-#buhgtrlwnc .gt_striped {
+#okzyvexexs .gt_striped {
   background-color: rgba(128, 128, 128, 0.05);
 }
 
-#buhgtrlwnc .gt_table_body {
+#okzyvexexs .gt_table_body {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -1846,7 +1891,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-bottom-color: #D3D3D3;
 }
 
-#buhgtrlwnc .gt_footnotes {
+#okzyvexexs .gt_footnotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -1860,7 +1905,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-right-color: #D3D3D3;
 }
 
-#buhgtrlwnc .gt_footnote {
+#okzyvexexs .gt_footnote {
   margin: 0px;
   font-size: 90%;
   padding-top: 4px;
@@ -1869,7 +1914,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   padding-right: 5px;
 }
 
-#buhgtrlwnc .gt_sourcenotes {
+#okzyvexexs .gt_sourcenotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -1883,7 +1928,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-right-color: #D3D3D3;
 }
 
-#buhgtrlwnc .gt_sourcenote {
+#okzyvexexs .gt_sourcenote {
   font-size: 90%;
   padding-top: 4px;
   padding-bottom: 4px;
@@ -1891,72 +1936,72 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   padding-right: 5px;
 }
 
-#buhgtrlwnc .gt_left {
+#okzyvexexs .gt_left {
   text-align: left;
 }
 
-#buhgtrlwnc .gt_center {
+#okzyvexexs .gt_center {
   text-align: center;
 }
 
-#buhgtrlwnc .gt_right {
+#okzyvexexs .gt_right {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-#buhgtrlwnc .gt_font_normal {
+#okzyvexexs .gt_font_normal {
   font-weight: normal;
 }
 
-#buhgtrlwnc .gt_font_bold {
+#okzyvexexs .gt_font_bold {
   font-weight: bold;
 }
 
-#buhgtrlwnc .gt_font_italic {
+#okzyvexexs .gt_font_italic {
   font-style: italic;
 }
 
-#buhgtrlwnc .gt_super {
+#okzyvexexs .gt_super {
   font-size: 65%;
 }
 
-#buhgtrlwnc .gt_footnote_marks {
+#okzyvexexs .gt_footnote_marks {
   font-size: 75%;
   vertical-align: 0.4em;
   position: initial;
 }
 
-#buhgtrlwnc .gt_asterisk {
+#okzyvexexs .gt_asterisk {
   font-size: 100%;
   vertical-align: 0;
 }
 
-#buhgtrlwnc .gt_indent_1 {
+#okzyvexexs .gt_indent_1 {
   text-indent: 5px;
 }
 
-#buhgtrlwnc .gt_indent_2 {
+#okzyvexexs .gt_indent_2 {
   text-indent: 10px;
 }
 
-#buhgtrlwnc .gt_indent_3 {
+#okzyvexexs .gt_indent_3 {
   text-indent: 15px;
 }
 
-#buhgtrlwnc .gt_indent_4 {
+#okzyvexexs .gt_indent_4 {
   text-indent: 20px;
 }
 
-#buhgtrlwnc .gt_indent_5 {
+#okzyvexexs .gt_indent_5 {
   text-indent: 25px;
 }
 
-#buhgtrlwnc .katex-display {
+#okzyvexexs .katex-display {
   display: inline-flex !important;
   margin-bottom: 0.75em !important;
 }
 
-#buhgtrlwnc div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+#okzyvexexs div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
   height: 0px !important;
 }
 </style>
@@ -2043,45 +2088,45 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># only one significant difference between p+0.7 and p+1.3</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dunn_test</span>(emotions, surprise<span class="sc">~</span>condition,</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>                     <span class="at">p.adjust.method =</span> <span class="st">"BH"</span>)</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co"># evidence of some difference in disgust between negative and positive prompt</span></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="fu">dunn_test</span>(emotions, disgust<span class="sc">~</span>condition,</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>          <span class="at">p.adjust.method =</span> <span class="st">"BH"</span>)</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co"># clear-cut difference in joy between negative and positive prompt</span></span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="fu">dunn_test</span>(emotions, joy<span class="sc">~</span>condition,</span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>          <span class="at">p.adjust.method =</span> <span class="st">"BH"</span>)</span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="co"># clear-cut difference in sadness between negative and positive prompt</span></span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="fu">dunn_test</span>(emotions, sadness<span class="sc">~</span>condition,</span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>          <span class="at">p.adjust.method =</span> <span class="st">"BH"</span>)</span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="co"># clear-cut difference in fear between negative and positive prompt</span></span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="fu">dunn_test</span>(emotions, fear<span class="sc">~</span>condition,</span>
-<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>          <span class="at">p.adjust.method =</span> <span class="st">"BH"</span>)</span>
-<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="co"># clear-cut difference in anticipation between negative and positive prompt</span></span>
-<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="fu">dunn_test</span>(emotions, anticipation<span class="sc">~</span>condition,</span>
-<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>          <span class="at">p.adjust.method =</span> <span class="st">"BH"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># only one significant difference between p+0.7 and p+1.3</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dunn_test</span>(emotions, surprise<span class="sc">~</span>condition,</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>                     <span class="at">p.adjust.method =</span> <span class="st">"BH"</span>)</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co"># evidence of some difference in disgust between negative and positive prompt</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="fu">dunn_test</span>(emotions, disgust<span class="sc">~</span>condition,</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>          <span class="at">p.adjust.method =</span> <span class="st">"BH"</span>)</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="co"># clear-cut difference in joy between negative and positive prompt</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="fu">dunn_test</span>(emotions, joy<span class="sc">~</span>condition,</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>          <span class="at">p.adjust.method =</span> <span class="st">"BH"</span>)</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="co"># clear-cut difference in sadness between negative and positive prompt</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="fu">dunn_test</span>(emotions, sadness<span class="sc">~</span>condition,</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>          <span class="at">p.adjust.method =</span> <span class="st">"BH"</span>)</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="co"># clear-cut difference in fear between negative and positive prompt</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="fu">dunn_test</span>(emotions, fear<span class="sc">~</span>condition,</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>          <span class="at">p.adjust.method =</span> <span class="st">"BH"</span>)</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="co"># clear-cut difference in anticipation between negative and positive prompt</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a><span class="fu">dunn_test</span>(emotions, anticipation<span class="sc">~</span>condition,</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>          <span class="at">p.adjust.method =</span> <span class="st">"BH"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <div class="cell">
 <div class="cell-output-display">
-<div id="jexrceopsl" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
-<style>#jexrceopsl table {
+<div id="lzkbaurgxb" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#lzkbaurgxb table {
   font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-#jexrceopsl thead, #jexrceopsl tbody, #jexrceopsl tfoot, #jexrceopsl tr, #jexrceopsl td, #jexrceopsl th {
+#lzkbaurgxb thead, #lzkbaurgxb tbody, #lzkbaurgxb tfoot, #lzkbaurgxb tr, #lzkbaurgxb td, #lzkbaurgxb th {
   border-style: none;
 }
 
-#jexrceopsl p {
+#lzkbaurgxb p {
   margin: 0;
   padding: 0;
 }
 
-#jexrceopsl .gt_table {
+#lzkbaurgxb .gt_table {
   display: table;
   border-collapse: collapse;
   line-height: normal;
@@ -2107,12 +2152,12 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-left-color: #D3D3D3;
 }
 
-#jexrceopsl .gt_caption {
+#lzkbaurgxb .gt_caption {
   padding-top: 4px;
   padding-bottom: 4px;
 }
 
-#jexrceopsl .gt_title {
+#lzkbaurgxb .gt_title {
   color: #333333;
   font-size: 125%;
   font-weight: initial;
@@ -2124,7 +2169,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-bottom-width: 0;
 }
 
-#jexrceopsl .gt_subtitle {
+#lzkbaurgxb .gt_subtitle {
   color: #333333;
   font-size: 85%;
   font-weight: initial;
@@ -2136,7 +2181,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-top-width: 0;
 }
 
-#jexrceopsl .gt_heading {
+#lzkbaurgxb .gt_heading {
   background-color: #FFFFFF;
   text-align: center;
   border-bottom-color: #FFFFFF;
@@ -2148,13 +2193,13 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-right-color: #D3D3D3;
 }
 
-#jexrceopsl .gt_bottom_border {
+#lzkbaurgxb .gt_bottom_border {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
 }
 
-#jexrceopsl .gt_col_headings {
+#lzkbaurgxb .gt_col_headings {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -2169,7 +2214,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-right-color: #D3D3D3;
 }
 
-#jexrceopsl .gt_col_heading {
+#lzkbaurgxb .gt_col_heading {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -2189,7 +2234,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   overflow-x: hidden;
 }
 
-#jexrceopsl .gt_column_spanner_outer {
+#lzkbaurgxb .gt_column_spanner_outer {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -2201,15 +2246,15 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   padding-right: 4px;
 }
 
-#jexrceopsl .gt_column_spanner_outer:first-child {
+#lzkbaurgxb .gt_column_spanner_outer:first-child {
   padding-left: 0;
 }
 
-#jexrceopsl .gt_column_spanner_outer:last-child {
+#lzkbaurgxb .gt_column_spanner_outer:last-child {
   padding-right: 0;
 }
 
-#jexrceopsl .gt_column_spanner {
+#lzkbaurgxb .gt_column_spanner {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
@@ -2221,11 +2266,11 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   width: 100%;
 }
 
-#jexrceopsl .gt_spanner_row {
+#lzkbaurgxb .gt_spanner_row {
   border-bottom-style: hidden;
 }
 
-#jexrceopsl .gt_group_heading {
+#lzkbaurgxb .gt_group_heading {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -2251,7 +2296,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   text-align: left;
 }
 
-#jexrceopsl .gt_empty_group_heading {
+#lzkbaurgxb .gt_empty_group_heading {
   padding: 0.5px;
   color: #333333;
   background-color: #FFFFFF;
@@ -2266,15 +2311,15 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   vertical-align: middle;
 }
 
-#jexrceopsl .gt_from_md > :first-child {
+#lzkbaurgxb .gt_from_md > :first-child {
   margin-top: 0;
 }
 
-#jexrceopsl .gt_from_md > :last-child {
+#lzkbaurgxb .gt_from_md > :last-child {
   margin-bottom: 0;
 }
 
-#jexrceopsl .gt_row {
+#lzkbaurgxb .gt_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -2293,7 +2338,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   overflow-x: hidden;
 }
 
-#jexrceopsl .gt_stub {
+#lzkbaurgxb .gt_stub {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -2306,7 +2351,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   padding-right: 5px;
 }
 
-#jexrceopsl .gt_stub_row_group {
+#lzkbaurgxb .gt_stub_row_group {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -2320,15 +2365,15 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   vertical-align: top;
 }
 
-#jexrceopsl .gt_row_group_first td {
+#lzkbaurgxb .gt_row_group_first td {
   border-top-width: 2px;
 }
 
-#jexrceopsl .gt_row_group_first th {
+#lzkbaurgxb .gt_row_group_first th {
   border-top-width: 2px;
 }
 
-#jexrceopsl .gt_summary_row {
+#lzkbaurgxb .gt_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -2338,16 +2383,16 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   padding-right: 5px;
 }
 
-#jexrceopsl .gt_first_summary_row {
+#lzkbaurgxb .gt_first_summary_row {
   border-top-style: solid;
   border-top-color: #D3D3D3;
 }
 
-#jexrceopsl .gt_first_summary_row.thick {
+#lzkbaurgxb .gt_first_summary_row.thick {
   border-top-width: 2px;
 }
 
-#jexrceopsl .gt_last_summary_row {
+#lzkbaurgxb .gt_last_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -2357,7 +2402,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-bottom-color: #D3D3D3;
 }
 
-#jexrceopsl .gt_grand_summary_row {
+#lzkbaurgxb .gt_grand_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -2367,7 +2412,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   padding-right: 5px;
 }
 
-#jexrceopsl .gt_first_grand_summary_row {
+#lzkbaurgxb .gt_first_grand_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -2377,7 +2422,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-top-color: #D3D3D3;
 }
 
-#jexrceopsl .gt_last_grand_summary_row_top {
+#lzkbaurgxb .gt_last_grand_summary_row_top {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -2387,11 +2432,11 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-bottom-color: #D3D3D3;
 }
 
-#jexrceopsl .gt_striped {
+#lzkbaurgxb .gt_striped {
   background-color: rgba(128, 128, 128, 0.05);
 }
 
-#jexrceopsl .gt_table_body {
+#lzkbaurgxb .gt_table_body {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -2400,7 +2445,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-bottom-color: #D3D3D3;
 }
 
-#jexrceopsl .gt_footnotes {
+#lzkbaurgxb .gt_footnotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -2414,7 +2459,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-right-color: #D3D3D3;
 }
 
-#jexrceopsl .gt_footnote {
+#lzkbaurgxb .gt_footnote {
   margin: 0px;
   font-size: 90%;
   padding-top: 4px;
@@ -2423,7 +2468,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   padding-right: 5px;
 }
 
-#jexrceopsl .gt_sourcenotes {
+#lzkbaurgxb .gt_sourcenotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -2437,7 +2482,7 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   border-right-color: #D3D3D3;
 }
 
-#jexrceopsl .gt_sourcenote {
+#lzkbaurgxb .gt_sourcenote {
   font-size: 90%;
   padding-top: 4px;
   padding-bottom: 4px;
@@ -2445,72 +2490,72 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
   padding-right: 5px;
 }
 
-#jexrceopsl .gt_left {
+#lzkbaurgxb .gt_left {
   text-align: left;
 }
 
-#jexrceopsl .gt_center {
+#lzkbaurgxb .gt_center {
   text-align: center;
 }
 
-#jexrceopsl .gt_right {
+#lzkbaurgxb .gt_right {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-#jexrceopsl .gt_font_normal {
+#lzkbaurgxb .gt_font_normal {
   font-weight: normal;
 }
 
-#jexrceopsl .gt_font_bold {
+#lzkbaurgxb .gt_font_bold {
   font-weight: bold;
 }
 
-#jexrceopsl .gt_font_italic {
+#lzkbaurgxb .gt_font_italic {
   font-style: italic;
 }
 
-#jexrceopsl .gt_super {
+#lzkbaurgxb .gt_super {
   font-size: 65%;
 }
 
-#jexrceopsl .gt_footnote_marks {
+#lzkbaurgxb .gt_footnote_marks {
   font-size: 75%;
   vertical-align: 0.4em;
   position: initial;
 }
 
-#jexrceopsl .gt_asterisk {
+#lzkbaurgxb .gt_asterisk {
   font-size: 100%;
   vertical-align: 0;
 }
 
-#jexrceopsl .gt_indent_1 {
+#lzkbaurgxb .gt_indent_1 {
   text-indent: 5px;
 }
 
-#jexrceopsl .gt_indent_2 {
+#lzkbaurgxb .gt_indent_2 {
   text-indent: 10px;
 }
 
-#jexrceopsl .gt_indent_3 {
+#lzkbaurgxb .gt_indent_3 {
   text-indent: 15px;
 }
 
-#jexrceopsl .gt_indent_4 {
+#lzkbaurgxb .gt_indent_4 {
   text-indent: 20px;
 }
 
-#jexrceopsl .gt_indent_5 {
+#lzkbaurgxb .gt_indent_5 {
   text-indent: 25px;
 }
 
-#jexrceopsl .katex-display {
+#lzkbaurgxb .katex-display {
   display: inline-flex !important;
   margin-bottom: 0.75em !important;
 }
 
-#jexrceopsl div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+#lzkbaurgxb div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
   height: 0px !important;
 }
 </style>
@@ -3268,27 +3313,27 @@ Specify the column types or set `show_col_types = FALSE` to quiet this message.
 <li><p>set up Factgenie by referring to the official documentation available at <a href="https://github.com/ufal/factgenie" class="uri">https://github.com/ufal/factgenie</a></p></li>
 <li><p>run the <code>make_jsonl_input.py</code> and <code>make_jsonl_output.py</code> to prepare data for the analysis inside of the self-hosted web app offered by Factgenie</p></li>
 <li><p>start up the app by running the following in a CLI instance:</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">factgenie</span> run <span class="at">--host</span><span class="op">=</span>127.0.0.1 <span class="at">--port</span> 8890</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">factgenie</span> run <span class="at">--host</span><span class="op">=</span>127.0.0.1 <span class="at">--port</span> 8890</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>When inside the app we imported the data as instructed in the app setup by separating instances of prompts used to generate the texts from the outputs (i.e., the two <code>.jsonl</code> files generated in step 2.</p></li>
 </ol>
 <p><em>Gemma3</em> wrote the annotations and showed that only 5 texts out of 590 showed semantical inconsistencies. The results are available in the <code>llm-eval-gemini27B.csv</code> file.</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>llm_eval_gemini27B <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"generated_data/llm-evals/llm-eval-gemini27B.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># import dataset with LLM annotations and evaluations</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>llm_eval_gemini27B <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"generated_data/llm-evals/llm-eval-gemini27B.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
-<div class="cell-output cell-output-stderr">
-<pre><code>Rows: 3 Columns: 8
-── Column specification ────────────────────────────────────────────────────────
-Delimiter: ","
-chr (4): Dataset, Split, Setup, Category
-dbl (4): Ex. annotated, Count, Avg. per ex., Prevalence
-
-ℹ Use `spec()` to retrieve the full column specification for this data.
-ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
-</div>
 </div>
 <div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(llm_eval_gemini27B, <span class="fu">aes</span>(<span class="at">x =</span> Category, <span class="at">y =</span> Count, <span class="at">fill =</span> Category)) <span class="sc">+</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>() <span class="sc">+</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Number of Inconsistencies Found (out of 590 rated texts)"</span>) <span class="sc">+</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">hjust =</span> <span class="fl">0.5</span>),</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>        <span class="at">axis.text.x =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>        <span class="at">axis.title.x =</span> <span class="fu">element_blank</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -3774,321 +3819,380 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   }
 });
 </script><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
-<div class="sourceCode" id="cb8" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Hackaton Report - Code Review"</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="an">author:</span><span class="co"> Anthony Tricarico</span></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="an">format:</span></span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="co">  html:</span></span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="co">    theme: flatly</span></span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="co">    toc: true</span></span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="co">    number-sections: true</span></span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="co">    code-fold: true</span></span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="co">    code-tools: true</span></span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="co">    df-print: paged</span></span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="an">output-dir:</span><span class="co"> docs</span></span>
-<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
-<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a><span class="fu"># Introduction</span></span>
-<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>Understanding to what extent the results of a Large Language Model (LLM) can be trusted in text generation tasks is of fundamental importance nowadays. To this end, this technical report discusses the results of an experiment carried out using an open source LLM (Mistral) to understand how well this kind of model can represent the emotional context conveyed through a textual prompt. Mistral's model was instructed to generate texts following a prompt that could be either positively or negatively charged emotionally. Moreover, the temperature of the model was also manipulated to check for possible drifts from the given prompts with higher temperatures. The results of a semantic frame analysis are reported to show that the emotions that occur in an LLM-generated text are mostly in line with the expectations provided by the content of the prompt used to generate the text. Additional analyses are discussed to quantify semantical and logical correctness to show that open source LLMs perform very well for the task considered in the current experiment but are not immune to biases.</span>
-<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>This additional portion of the report goes through the technical steps and setup of the code used to produce the data and analyze it.</span>
-<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a><span class="fu"># Generating data</span></span>
-<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>Data for this experiment was produced in two steps. During the first iteration, carried out calling the API remotely, we asked the API to produce the entire sample of data (around 600 texts, 200 for each temperature level selected). However, we noticed that most of the texts produced with the highest temperature (1.3) were not usable and after cleaning them (in Python using the <span class="in">`clean_data.py`</span> script) we had to rebalance the groups and adjust for the dropped texts from the highest temperature group. To this end, the second iteration of the text generation happened. This time, however, the same Mistral model was run locally using the framework provided by <span class="in">`ollama`</span> and exploiting the connection to the locally hosted API. The texts produced in this fashion passed all cleaning tests and were included in the final dataset by running the <span class="in">`clean_data.py`</span> script and saving the final merged dataset in <span class="in">`.csv`</span> format. The last step was to compute $z$-scores for each emotion embedded in the generated texts using the <span class="in">`create_emotions.py`</span> script. The final dataset (<span class="in">`emotions.csv)`</span> was then saved and was used for the subsequent analyses. After performing this step, no more data cleaning was needed.</span>
-<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a><span class="fu"># Experiment 1 - Statistical Analysis</span></span>
-<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>The analysis for the first study was carried out using <span class="in">`R`</span> version 4.4.3 and the following packages:</span>
-<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(pacman)</span>
-<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a><span class="fu">p_load</span>(tidyverse, ggplot2, readr, janitor, psych, ggthemes, car, stringr ,rstatix, patchwork, gridExtra, gt)</span>
-<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a><span class="fu">theme_set</span>(<span class="fu">theme_minimal</span>())</span>
-<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb8-36"><a href="#cb8-36" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-37"><a href="#cb8-37" aria-hidden="true" tabindex="-1"></a>Data was then imported:</span>
-<span id="cb8-38"><a href="#cb8-38" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-39"><a href="#cb8-39" aria-hidden="true" tabindex="-1"></a><span class="in">```{r,echo=FALSE}</span></span>
-<span id="cb8-40"><a href="#cb8-40" aria-hidden="true" tabindex="-1"></a><span class="in">emotions &lt;- read_csv("generated_data/cleaned/emotions.csv")</span></span>
-<span id="cb8-41"><a href="#cb8-41" aria-hidden="true" tabindex="-1"></a><span class="in"># remove first two columns, keep all others</span></span>
-<span id="cb8-42"><a href="#cb8-42" aria-hidden="true" tabindex="-1"></a><span class="in">emotions &lt;- emotions[, 3:length(emotions)]</span></span>
-<span id="cb8-43"><a href="#cb8-43" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb8-44"><a href="#cb8-44" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-45"><a href="#cb8-45" aria-hidden="true" tabindex="-1"></a><span class="fu">## Data pre-processing</span></span>
-<span id="cb8-46"><a href="#cb8-46" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-47"><a href="#cb8-47" aria-hidden="true" tabindex="-1"></a>The first step in preparing this analysis is to declare the groups and specify their partitioning in the dataframe.</span>
-<span id="cb8-48"><a href="#cb8-48" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-49"><a href="#cb8-49" aria-hidden="true" tabindex="-1"></a><span class="in">```{r, echo=FALSE}</span></span>
-<span id="cb8-50"><a href="#cb8-50" aria-hidden="true" tabindex="-1"></a><span class="in"># cleans the names in the dataset, removing whitespaces from the column name</span></span>
-<span id="cb8-51"><a href="#cb8-51" aria-hidden="true" tabindex="-1"></a><span class="in">emotions &lt;- clean_names(emotions)</span></span>
-<span id="cb8-52"><a href="#cb8-52" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-53"><a href="#cb8-53" aria-hidden="true" tabindex="-1"></a><span class="in">emotions &lt;- emotions %&gt;% </span></span>
-<span id="cb8-54"><a href="#cb8-54" aria-hidden="true" tabindex="-1"></a><span class="in">  mutate(condition = paste(substr(type_of_prompt, 1, 1), temperature, sep = '+'),</span></span>
-<span id="cb8-55"><a href="#cb8-55" aria-hidden="true" tabindex="-1"></a><span class="in">         condition = as.factor(condition),</span></span>
-<span id="cb8-56"><a href="#cb8-56" aria-hidden="true" tabindex="-1"></a><span class="in">         type_of_prompt = as.factor(type_of_prompt),</span></span>
-<span id="cb8-57"><a href="#cb8-57" aria-hidden="true" tabindex="-1"></a><span class="in">         temperature = as.factor(temperature))</span></span>
-<span id="cb8-58"><a href="#cb8-58" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb8-59"><a href="#cb8-59" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-60"><a href="#cb8-60" aria-hidden="true" tabindex="-1"></a>Then, it is informative to look at different summary statistics for each condition.</span>
-<span id="cb8-61"><a href="#cb8-61" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-62"><a href="#cb8-62" aria-hidden="true" tabindex="-1"></a><span class="in">```{r, eval=FALSE}</span></span>
-<span id="cb8-63"><a href="#cb8-63" aria-hidden="true" tabindex="-1"></a><span class="in"># check summary statistics by condition</span></span>
-<span id="cb8-64"><a href="#cb8-64" aria-hidden="true" tabindex="-1"></a><span class="in">describeBy(emotions ~ condition)</span></span>
-<span id="cb8-65"><a href="#cb8-65" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb8-66"><a href="#cb8-66" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-67"><a href="#cb8-67" aria-hidden="true" tabindex="-1"></a><span class="fu">## Assumption checks for ANOVA</span></span>
-<span id="cb8-68"><a href="#cb8-68" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-69"><a href="#cb8-69" aria-hidden="true" tabindex="-1"></a>When comparing multiple means, the first test that comes to mind is ANOVA. However, since it is a parametric test, it is important to check if the assumption that it makes on data are respected. The two main assumptions of ANOVA are:</span>
-<span id="cb8-70"><a href="#cb8-70" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-71"><a href="#cb8-71" aria-hidden="true" tabindex="-1"></a><span class="ss">1.  </span>The dependent variable is normally distributed across groups</span>
-<span id="cb8-72"><a href="#cb8-72" aria-hidden="true" tabindex="-1"></a><span class="ss">2.  </span>The dependent variable shares the same variance across groups</span>
-<span id="cb8-73"><a href="#cb8-73" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-74"><a href="#cb8-74" aria-hidden="true" tabindex="-1"></a>To check those assumptions, two tests are usually employed: Shapiro-Wilk's test, and Levene's test. If any one of those tests returns a statistically significant result for any emotion, then it means that ANOVA cannot be used as the data violates the basic assumptions that it makes. A level of significance $\alpha$ of 5% is used to interpret statistical significance for those tests.</span>
-<span id="cb8-75"><a href="#cb8-75" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-76"><a href="#cb8-76" aria-hidden="true" tabindex="-1"></a>Below follows a summary of the results from the tests:</span>
-<span id="cb8-77"><a href="#cb8-77" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-78"><a href="#cb8-78" aria-hidden="true" tabindex="-1"></a><span class="in">```{r, echo=FALSE}</span></span>
-<span id="cb8-79"><a href="#cb8-79" aria-hidden="true" tabindex="-1"></a><span class="in"># Emotions to test</span></span>
-<span id="cb8-80"><a href="#cb8-80" aria-hidden="true" tabindex="-1"></a><span class="in">emotions_list &lt;- c("anger", "trust", "surprise", "disgust", "joy", "sadness", "fear", "anticipation")</span></span>
-<span id="cb8-81"><a href="#cb8-81" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-82"><a href="#cb8-82" aria-hidden="true" tabindex="-1"></a><span class="in"># Run Levene's tests and collect results</span></span>
-<span id="cb8-83"><a href="#cb8-83" aria-hidden="true" tabindex="-1"></a><span class="in">levene_results &lt;- lapply(emotions_list, function(emotion) {</span></span>
-<span id="cb8-84"><a href="#cb8-84" aria-hidden="true" tabindex="-1"></a><span class="in">  formula &lt;- as.formula(paste(emotion, "~ condition"))</span></span>
-<span id="cb8-85"><a href="#cb8-85" aria-hidden="true" tabindex="-1"></a><span class="in">  test &lt;- leveneTest(formula, data = emotions)</span></span>
-<span id="cb8-86"><a href="#cb8-86" aria-hidden="true" tabindex="-1"></a><span class="in">  data.frame(</span></span>
-<span id="cb8-87"><a href="#cb8-87" aria-hidden="true" tabindex="-1"></a><span class="in">    Emotion = emotion,</span></span>
-<span id="cb8-88"><a href="#cb8-88" aria-hidden="true" tabindex="-1"></a><span class="in">    F_value = round(test[1, "F value"], 2),</span></span>
-<span id="cb8-89"><a href="#cb8-89" aria-hidden="true" tabindex="-1"></a><span class="in">    df1 = test[1, "Df"],</span></span>
-<span id="cb8-90"><a href="#cb8-90" aria-hidden="true" tabindex="-1"></a><span class="in">    df2 = test[2, "Df"],</span></span>
-<span id="cb8-91"><a href="#cb8-91" aria-hidden="true" tabindex="-1"></a><span class="in">    p_value = round(test[1, "Pr(&gt;F)"], 4),</span></span>
-<span id="cb8-92"><a href="#cb8-92" aria-hidden="true" tabindex="-1"></a><span class="in">    Equal_Variance = ifelse(test[1, "Pr(&gt;F)"] &lt; 0.05, "No", "Yes")</span></span>
-<span id="cb8-93"><a href="#cb8-93" aria-hidden="true" tabindex="-1"></a><span class="in">  )</span></span>
-<span id="cb8-94"><a href="#cb8-94" aria-hidden="true" tabindex="-1"></a><span class="in">})</span></span>
-<span id="cb8-95"><a href="#cb8-95" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-96"><a href="#cb8-96" aria-hidden="true" tabindex="-1"></a><span class="in">levene_df &lt;- bind_rows(levene_results)</span></span>
-<span id="cb8-97"><a href="#cb8-97" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-98"><a href="#cb8-98" aria-hidden="true" tabindex="-1"></a><span class="in"># Format table with gt</span></span>
-<span id="cb8-99"><a href="#cb8-99" aria-hidden="true" tabindex="-1"></a><span class="in">levene_df %&gt;%</span></span>
-<span id="cb8-100"><a href="#cb8-100" aria-hidden="true" tabindex="-1"></a><span class="in">  gt() %&gt;%</span></span>
-<span id="cb8-101"><a href="#cb8-101" aria-hidden="true" tabindex="-1"></a><span class="in">  tab_header(</span></span>
-<span id="cb8-102"><a href="#cb8-102" aria-hidden="true" tabindex="-1"></a><span class="in">    title = "Levene's Test for Homogeneity of Variance by Emotion"</span></span>
-<span id="cb8-103"><a href="#cb8-103" aria-hidden="true" tabindex="-1"></a><span class="in">  ) %&gt;%</span></span>
-<span id="cb8-104"><a href="#cb8-104" aria-hidden="true" tabindex="-1"></a><span class="in">  cols_label(</span></span>
-<span id="cb8-105"><a href="#cb8-105" aria-hidden="true" tabindex="-1"></a><span class="in">    F_value = "F Value",</span></span>
-<span id="cb8-106"><a href="#cb8-106" aria-hidden="true" tabindex="-1"></a><span class="in">    df1 = "df1",</span></span>
-<span id="cb8-107"><a href="#cb8-107" aria-hidden="true" tabindex="-1"></a><span class="in">    df2 = "df2",</span></span>
-<span id="cb8-108"><a href="#cb8-108" aria-hidden="true" tabindex="-1"></a><span class="in">    p_value = "p-value",</span></span>
-<span id="cb8-109"><a href="#cb8-109" aria-hidden="true" tabindex="-1"></a><span class="in">    Equal_Variance = "Equal Variance?"</span></span>
-<span id="cb8-110"><a href="#cb8-110" aria-hidden="true" tabindex="-1"></a><span class="in">  ) %&gt;%</span></span>
-<span id="cb8-111"><a href="#cb8-111" aria-hidden="true" tabindex="-1"></a><span class="in">  data_color(</span></span>
-<span id="cb8-112"><a href="#cb8-112" aria-hidden="true" tabindex="-1"></a><span class="in">    columns = c(p_value),</span></span>
-<span id="cb8-113"><a href="#cb8-113" aria-hidden="true" tabindex="-1"></a><span class="in">    fn = scales::col_bin(c("red", "orange", "green"), bins = c(0, 0.05, 0.1, 1))</span></span>
-<span id="cb8-114"><a href="#cb8-114" aria-hidden="true" tabindex="-1"></a><span class="in">  ) %&gt;%</span></span>
-<span id="cb8-115"><a href="#cb8-115" aria-hidden="true" tabindex="-1"></a><span class="in">  tab_style(</span></span>
-<span id="cb8-116"><a href="#cb8-116" aria-hidden="true" tabindex="-1"></a><span class="in">    style = list(cell_text(weight = "bold")),</span></span>
-<span id="cb8-117"><a href="#cb8-117" aria-hidden="true" tabindex="-1"></a><span class="in">    locations = cells_body(columns = Equal_Variance, rows = Equal_Variance == "No")</span></span>
-<span id="cb8-118"><a href="#cb8-118" aria-hidden="true" tabindex="-1"></a><span class="in">  )</span></span>
-<span id="cb8-119"><a href="#cb8-119" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-120"><a href="#cb8-120" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb8-121"><a href="#cb8-121" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-122"><a href="#cb8-122" aria-hidden="true" tabindex="-1"></a><span class="in">```{r, echo=FALSE}</span></span>
-<span id="cb8-123"><a href="#cb8-123" aria-hidden="true" tabindex="-1"></a><span class="in"># Emotions to test</span></span>
-<span id="cb8-124"><a href="#cb8-124" aria-hidden="true" tabindex="-1"></a><span class="in">emotions_list &lt;- c("anger", "trust", "surprise", "disgust", "joy", "sadness", "fear", "anticipation")</span></span>
-<span id="cb8-125"><a href="#cb8-125" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-126"><a href="#cb8-126" aria-hidden="true" tabindex="-1"></a><span class="in"># Run Shapiro-Wilk tests and collect results</span></span>
-<span id="cb8-127"><a href="#cb8-127" aria-hidden="true" tabindex="-1"></a><span class="in">shapiro_results &lt;- lapply(emotions_list, function(emotion) {</span></span>
-<span id="cb8-128"><a href="#cb8-128" aria-hidden="true" tabindex="-1"></a><span class="in">  results &lt;- emotions %&gt;%</span></span>
-<span id="cb8-129"><a href="#cb8-129" aria-hidden="true" tabindex="-1"></a><span class="in">    group_by(condition) %&gt;%</span></span>
-<span id="cb8-130"><a href="#cb8-130" aria-hidden="true" tabindex="-1"></a><span class="in">    summarise(</span></span>
-<span id="cb8-131"><a href="#cb8-131" aria-hidden="true" tabindex="-1"></a><span class="in">      p_value = tryCatch(</span></span>
-<span id="cb8-132"><a href="#cb8-132" aria-hidden="true" tabindex="-1"></a><span class="in">        shapiro.test(get(emotion))$p.value,</span></span>
-<span id="cb8-133"><a href="#cb8-133" aria-hidden="true" tabindex="-1"></a><span class="in">        error = function(e) NA</span></span>
-<span id="cb8-134"><a href="#cb8-134" aria-hidden="true" tabindex="-1"></a><span class="in">      ),</span></span>
-<span id="cb8-135"><a href="#cb8-135" aria-hidden="true" tabindex="-1"></a><span class="in">      .groups = "drop"</span></span>
-<span id="cb8-136"><a href="#cb8-136" aria-hidden="true" tabindex="-1"></a><span class="in">    ) %&gt;%</span></span>
-<span id="cb8-137"><a href="#cb8-137" aria-hidden="true" tabindex="-1"></a><span class="in">    mutate(</span></span>
-<span id="cb8-138"><a href="#cb8-138" aria-hidden="true" tabindex="-1"></a><span class="in">      Emotion = emotion,</span></span>
-<span id="cb8-139"><a href="#cb8-139" aria-hidden="true" tabindex="-1"></a><span class="in">      Normal_Distribution = ifelse(p_value &lt; 0.05, "No", "Yes"),</span></span>
-<span id="cb8-140"><a href="#cb8-140" aria-hidden="true" tabindex="-1"></a><span class="in">      p_value = round(p_value, 4)</span></span>
-<span id="cb8-141"><a href="#cb8-141" aria-hidden="true" tabindex="-1"></a><span class="in">    ) %&gt;%</span></span>
-<span id="cb8-142"><a href="#cb8-142" aria-hidden="true" tabindex="-1"></a><span class="in">    select(Emotion, condition, p_value, Normal_Distribution)</span></span>
-<span id="cb8-143"><a href="#cb8-143" aria-hidden="true" tabindex="-1"></a><span class="in">  return(results)</span></span>
-<span id="cb8-144"><a href="#cb8-144" aria-hidden="true" tabindex="-1"></a><span class="in">})</span></span>
-<span id="cb8-145"><a href="#cb8-145" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-146"><a href="#cb8-146" aria-hidden="true" tabindex="-1"></a><span class="in">shapiro_df &lt;- bind_rows(shapiro_results)</span></span>
-<span id="cb8-147"><a href="#cb8-147" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-148"><a href="#cb8-148" aria-hidden="true" tabindex="-1"></a><span class="in"># Format table with gt</span></span>
-<span id="cb8-149"><a href="#cb8-149" aria-hidden="true" tabindex="-1"></a><span class="in">shapiro_df %&gt;%</span></span>
-<span id="cb8-150"><a href="#cb8-150" aria-hidden="true" tabindex="-1"></a><span class="in">  gt() %&gt;%</span></span>
-<span id="cb8-151"><a href="#cb8-151" aria-hidden="true" tabindex="-1"></a><span class="in">  tab_header(</span></span>
-<span id="cb8-152"><a href="#cb8-152" aria-hidden="true" tabindex="-1"></a><span class="in">    title = "Shapiro-Wilk Test for Normality by Emotion and Condition"</span></span>
-<span id="cb8-153"><a href="#cb8-153" aria-hidden="true" tabindex="-1"></a><span class="in">  ) %&gt;%</span></span>
-<span id="cb8-154"><a href="#cb8-154" aria-hidden="true" tabindex="-1"></a><span class="in">  cols_label(</span></span>
-<span id="cb8-155"><a href="#cb8-155" aria-hidden="true" tabindex="-1"></a><span class="in">    condition = "Condition",</span></span>
-<span id="cb8-156"><a href="#cb8-156" aria-hidden="true" tabindex="-1"></a><span class="in">    p_value = "p-value",</span></span>
-<span id="cb8-157"><a href="#cb8-157" aria-hidden="true" tabindex="-1"></a><span class="in">    Normal_Distribution = "Normal?"</span></span>
-<span id="cb8-158"><a href="#cb8-158" aria-hidden="true" tabindex="-1"></a><span class="in">  ) %&gt;%</span></span>
-<span id="cb8-159"><a href="#cb8-159" aria-hidden="true" tabindex="-1"></a><span class="in">  data_color(</span></span>
-<span id="cb8-160"><a href="#cb8-160" aria-hidden="true" tabindex="-1"></a><span class="in">    columns = c(p_value),</span></span>
-<span id="cb8-161"><a href="#cb8-161" aria-hidden="true" tabindex="-1"></a><span class="in">    fn = scales::col_bin(c("red", "orange", "green"), bins = c(0, 0.05, 0.1, 1))</span></span>
-<span id="cb8-162"><a href="#cb8-162" aria-hidden="true" tabindex="-1"></a><span class="in">  ) %&gt;%</span></span>
-<span id="cb8-163"><a href="#cb8-163" aria-hidden="true" tabindex="-1"></a><span class="in">  tab_style(</span></span>
-<span id="cb8-164"><a href="#cb8-164" aria-hidden="true" tabindex="-1"></a><span class="in">    style = list(cell_text(weight = "bold")),</span></span>
-<span id="cb8-165"><a href="#cb8-165" aria-hidden="true" tabindex="-1"></a><span class="in">    locations = cells_body(columns = Normal_Distribution, rows = Normal_Distribution == "No")</span></span>
-<span id="cb8-166"><a href="#cb8-166" aria-hidden="true" tabindex="-1"></a><span class="in">  )</span></span>
-<span id="cb8-167"><a href="#cb8-167" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb8-168"><a href="#cb8-168" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-169"><a href="#cb8-169" aria-hidden="true" tabindex="-1"></a>As it is possible to observe these departures from the assumptions, make it necessary to use non-parametric alternatives to the ANOVA test.</span>
-<span id="cb8-170"><a href="#cb8-170" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-171"><a href="#cb8-171" aria-hidden="true" tabindex="-1"></a><span class="fu">## Kruskal-Wallis Test</span></span>
-<span id="cb8-172"><a href="#cb8-172" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-173"><a href="#cb8-173" aria-hidden="true" tabindex="-1"></a>This is an alternative to the ANOVA test and can be used for this specific dataset. As in the ANOVA test if the null hypothesis is rejected, then we know at least one group is different on average compared to another. The results for this test are reported below.</span>
-<span id="cb8-174"><a href="#cb8-174" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-175"><a href="#cb8-175" aria-hidden="true" tabindex="-1"></a><span class="in">```{r, echo=FALSE}</span></span>
-<span id="cb8-176"><a href="#cb8-176" aria-hidden="true" tabindex="-1"></a><span class="in"># Emotions to test</span></span>
-<span id="cb8-177"><a href="#cb8-177" aria-hidden="true" tabindex="-1"></a><span class="in">emotions_list &lt;- c("anger", "trust", "surprise", "disgust", "joy", "sadness", "fear", "anticipation")</span></span>
-<span id="cb8-178"><a href="#cb8-178" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-179"><a href="#cb8-179" aria-hidden="true" tabindex="-1"></a><span class="in"># Run Kruskal-Wallis tests and collect results</span></span>
-<span id="cb8-180"><a href="#cb8-180" aria-hidden="true" tabindex="-1"></a><span class="in">kruskal_results &lt;- lapply(emotions_list, function(emotion) {</span></span>
-<span id="cb8-181"><a href="#cb8-181" aria-hidden="true" tabindex="-1"></a><span class="in">  formula &lt;- as.formula(paste(emotion, "~ condition"))</span></span>
-<span id="cb8-182"><a href="#cb8-182" aria-hidden="true" tabindex="-1"></a><span class="in">  test &lt;- kruskal.test(formula, data = emotions)</span></span>
-<span id="cb8-183"><a href="#cb8-183" aria-hidden="true" tabindex="-1"></a><span class="in">  data.frame(</span></span>
-<span id="cb8-184"><a href="#cb8-184" aria-hidden="true" tabindex="-1"></a><span class="in">    Emotion = emotion,</span></span>
-<span id="cb8-185"><a href="#cb8-185" aria-hidden="true" tabindex="-1"></a><span class="in">    Chi_squared = round(test$statistic, 2),</span></span>
-<span id="cb8-186"><a href="#cb8-186" aria-hidden="true" tabindex="-1"></a><span class="in">    df = test$parameter,</span></span>
-<span id="cb8-187"><a href="#cb8-187" aria-hidden="true" tabindex="-1"></a><span class="in">    p_value = round(test$p.value, 4),</span></span>
-<span id="cb8-188"><a href="#cb8-188" aria-hidden="true" tabindex="-1"></a><span class="in">    Significant_Difference = ifelse(test$p.value &lt; 0.05, "Yes", "No")</span></span>
-<span id="cb8-189"><a href="#cb8-189" aria-hidden="true" tabindex="-1"></a><span class="in">  )</span></span>
-<span id="cb8-190"><a href="#cb8-190" aria-hidden="true" tabindex="-1"></a><span class="in">})</span></span>
-<span id="cb8-191"><a href="#cb8-191" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-192"><a href="#cb8-192" aria-hidden="true" tabindex="-1"></a><span class="in">kruskal_df &lt;- bind_rows(kruskal_results)</span></span>
-<span id="cb8-193"><a href="#cb8-193" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-194"><a href="#cb8-194" aria-hidden="true" tabindex="-1"></a><span class="in"># Format table with gt</span></span>
-<span id="cb8-195"><a href="#cb8-195" aria-hidden="true" tabindex="-1"></a><span class="in">kruskal_df %&gt;%</span></span>
-<span id="cb8-196"><a href="#cb8-196" aria-hidden="true" tabindex="-1"></a><span class="in">  gt() %&gt;%</span></span>
-<span id="cb8-197"><a href="#cb8-197" aria-hidden="true" tabindex="-1"></a><span class="in">  tab_header(</span></span>
-<span id="cb8-198"><a href="#cb8-198" aria-hidden="true" tabindex="-1"></a><span class="in">    title = "Kruskal-Wallis Test Results by Emotion"</span></span>
-<span id="cb8-199"><a href="#cb8-199" aria-hidden="true" tabindex="-1"></a><span class="in">  ) %&gt;%</span></span>
-<span id="cb8-200"><a href="#cb8-200" aria-hidden="true" tabindex="-1"></a><span class="in">  cols_label(</span></span>
-<span id="cb8-201"><a href="#cb8-201" aria-hidden="true" tabindex="-1"></a><span class="in">    Chi_squared = "Chi-squared",</span></span>
-<span id="cb8-202"><a href="#cb8-202" aria-hidden="true" tabindex="-1"></a><span class="in">    df = "df",</span></span>
-<span id="cb8-203"><a href="#cb8-203" aria-hidden="true" tabindex="-1"></a><span class="in">    p_value = "p-value",</span></span>
-<span id="cb8-204"><a href="#cb8-204" aria-hidden="true" tabindex="-1"></a><span class="in">    Significant_Difference = "Significant Difference?"</span></span>
-<span id="cb8-205"><a href="#cb8-205" aria-hidden="true" tabindex="-1"></a><span class="in">  ) %&gt;%</span></span>
-<span id="cb8-206"><a href="#cb8-206" aria-hidden="true" tabindex="-1"></a><span class="in">  data_color(</span></span>
-<span id="cb8-207"><a href="#cb8-207" aria-hidden="true" tabindex="-1"></a><span class="in">    columns = c(p_value),</span></span>
-<span id="cb8-208"><a href="#cb8-208" aria-hidden="true" tabindex="-1"></a><span class="in">    fn = scales::col_bin(c("green", "orange", "red"), bins = c(0, 0.05, 0.1, 1))</span></span>
-<span id="cb8-209"><a href="#cb8-209" aria-hidden="true" tabindex="-1"></a><span class="in">  ) %&gt;%</span></span>
-<span id="cb8-210"><a href="#cb8-210" aria-hidden="true" tabindex="-1"></a><span class="in">  tab_style(</span></span>
-<span id="cb8-211"><a href="#cb8-211" aria-hidden="true" tabindex="-1"></a><span class="in">    style = list(cell_text(weight = "bold")),</span></span>
-<span id="cb8-212"><a href="#cb8-212" aria-hidden="true" tabindex="-1"></a><span class="in">    locations = cells_body(columns = Significant_Difference, rows = Significant_Difference == "Yes")</span></span>
-<span id="cb8-213"><a href="#cb8-213" aria-hidden="true" tabindex="-1"></a><span class="in">  )</span></span>
-<span id="cb8-214"><a href="#cb8-214" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-215"><a href="#cb8-215" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb8-216"><a href="#cb8-216" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-217"><a href="#cb8-217" aria-hidden="true" tabindex="-1"></a>Then similarly to ANOVA, also this test needs to be followed up by a post-hoc which in this case is represented by the t-test non-parametric counterpart: Dunn's test.</span>
-<span id="cb8-218"><a href="#cb8-218" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-219"><a href="#cb8-219" aria-hidden="true" tabindex="-1"></a><span class="fu">### Dunn's test as post-hoc follow up</span></span>
-<span id="cb8-220"><a href="#cb8-220" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-221"><a href="#cb8-221" aria-hidden="true" tabindex="-1"></a><span class="in">```{r, eval=FALSE}</span></span>
-<span id="cb8-222"><a href="#cb8-222" aria-hidden="true" tabindex="-1"></a><span class="in"># only one significant difference between p+0.7 and p+1.3</span></span>
-<span id="cb8-223"><a href="#cb8-223" aria-hidden="true" tabindex="-1"></a><span class="in">dunn_test(emotions, surprise~condition,</span></span>
-<span id="cb8-224"><a href="#cb8-224" aria-hidden="true" tabindex="-1"></a><span class="in">                     p.adjust.method = "BH")</span></span>
-<span id="cb8-225"><a href="#cb8-225" aria-hidden="true" tabindex="-1"></a><span class="in"># evidence of some difference in disgust between negative and positive prompt</span></span>
-<span id="cb8-226"><a href="#cb8-226" aria-hidden="true" tabindex="-1"></a><span class="in">dunn_test(emotions, disgust~condition,</span></span>
-<span id="cb8-227"><a href="#cb8-227" aria-hidden="true" tabindex="-1"></a><span class="in">          p.adjust.method = "BH")</span></span>
-<span id="cb8-228"><a href="#cb8-228" aria-hidden="true" tabindex="-1"></a><span class="in"># clear-cut difference in joy between negative and positive prompt</span></span>
-<span id="cb8-229"><a href="#cb8-229" aria-hidden="true" tabindex="-1"></a><span class="in">dunn_test(emotions, joy~condition,</span></span>
-<span id="cb8-230"><a href="#cb8-230" aria-hidden="true" tabindex="-1"></a><span class="in">          p.adjust.method = "BH")</span></span>
-<span id="cb8-231"><a href="#cb8-231" aria-hidden="true" tabindex="-1"></a><span class="in"># clear-cut difference in sadness between negative and positive prompt</span></span>
-<span id="cb8-232"><a href="#cb8-232" aria-hidden="true" tabindex="-1"></a><span class="in">dunn_test(emotions, sadness~condition,</span></span>
-<span id="cb8-233"><a href="#cb8-233" aria-hidden="true" tabindex="-1"></a><span class="in">          p.adjust.method = "BH")</span></span>
-<span id="cb8-234"><a href="#cb8-234" aria-hidden="true" tabindex="-1"></a><span class="in"># clear-cut difference in fear between negative and positive prompt</span></span>
-<span id="cb8-235"><a href="#cb8-235" aria-hidden="true" tabindex="-1"></a><span class="in">dunn_test(emotions, fear~condition,</span></span>
-<span id="cb8-236"><a href="#cb8-236" aria-hidden="true" tabindex="-1"></a><span class="in">          p.adjust.method = "BH")</span></span>
-<span id="cb8-237"><a href="#cb8-237" aria-hidden="true" tabindex="-1"></a><span class="in"># clear-cut difference in anticipation between negative and positive prompt</span></span>
-<span id="cb8-238"><a href="#cb8-238" aria-hidden="true" tabindex="-1"></a><span class="in">dunn_test(emotions, anticipation~condition,</span></span>
-<span id="cb8-239"><a href="#cb8-239" aria-hidden="true" tabindex="-1"></a><span class="in">          p.adjust.method = "BH")</span></span>
-<span id="cb8-240"><a href="#cb8-240" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb8-241"><a href="#cb8-241" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-242"><a href="#cb8-242" aria-hidden="true" tabindex="-1"></a><span class="in">```{r, echo=FALSE}</span></span>
-<span id="cb8-243"><a href="#cb8-243" aria-hidden="true" tabindex="-1"></a><span class="in"># Emotions to test</span></span>
-<span id="cb8-244"><a href="#cb8-244" aria-hidden="true" tabindex="-1"></a><span class="in">emotions_list &lt;- c("surprise", "disgust", "joy", "sadness", "fear", "anticipation")</span></span>
-<span id="cb8-245"><a href="#cb8-245" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-246"><a href="#cb8-246" aria-hidden="true" tabindex="-1"></a><span class="in"># Run Dunn's tests and collect results</span></span>
-<span id="cb8-247"><a href="#cb8-247" aria-hidden="true" tabindex="-1"></a><span class="in">dunn_results &lt;- lapply(emotions_list, function(emotion) {</span></span>
-<span id="cb8-248"><a href="#cb8-248" aria-hidden="true" tabindex="-1"></a><span class="in">  df &lt;- dunn_test(emotions, formula(paste0(emotion, "~condition")), p.adjust.method = "BH") %&gt;%</span></span>
-<span id="cb8-249"><a href="#cb8-249" aria-hidden="true" tabindex="-1"></a><span class="in">    mutate(</span></span>
-<span id="cb8-250"><a href="#cb8-250" aria-hidden="true" tabindex="-1"></a><span class="in">      Emotion = emotion,</span></span>
-<span id="cb8-251"><a href="#cb8-251" aria-hidden="true" tabindex="-1"></a><span class="in">      p.adj = round(p.adj, 4),</span></span>
-<span id="cb8-252"><a href="#cb8-252" aria-hidden="true" tabindex="-1"></a><span class="in">      Significant = ifelse(p.adj &lt; 0.05, "Yes", "No")</span></span>
-<span id="cb8-253"><a href="#cb8-253" aria-hidden="true" tabindex="-1"></a><span class="in">    ) %&gt;%</span></span>
-<span id="cb8-254"><a href="#cb8-254" aria-hidden="true" tabindex="-1"></a><span class="in">    select(Emotion, group1, group2, p.adj, p.adj.signif, Significant)</span></span>
-<span id="cb8-255"><a href="#cb8-255" aria-hidden="true" tabindex="-1"></a><span class="in">  return(df)</span></span>
-<span id="cb8-256"><a href="#cb8-256" aria-hidden="true" tabindex="-1"></a><span class="in">})</span></span>
-<span id="cb8-257"><a href="#cb8-257" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-258"><a href="#cb8-258" aria-hidden="true" tabindex="-1"></a><span class="in">dunn_df &lt;- bind_rows(dunn_results)</span></span>
-<span id="cb8-259"><a href="#cb8-259" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-260"><a href="#cb8-260" aria-hidden="true" tabindex="-1"></a><span class="in"># Format with gt</span></span>
-<span id="cb8-261"><a href="#cb8-261" aria-hidden="true" tabindex="-1"></a><span class="in">dunn_df %&gt;%</span></span>
-<span id="cb8-262"><a href="#cb8-262" aria-hidden="true" tabindex="-1"></a><span class="in">  gt() %&gt;%</span></span>
-<span id="cb8-263"><a href="#cb8-263" aria-hidden="true" tabindex="-1"></a><span class="in">  tab_header(</span></span>
-<span id="cb8-264"><a href="#cb8-264" aria-hidden="true" tabindex="-1"></a><span class="in">    title = "Dunn Test (BH-adjusted) for Pairwise Comparisons by Emotion"</span></span>
-<span id="cb8-265"><a href="#cb8-265" aria-hidden="true" tabindex="-1"></a><span class="in">  ) %&gt;%</span></span>
-<span id="cb8-266"><a href="#cb8-266" aria-hidden="true" tabindex="-1"></a><span class="in">  cols_label(</span></span>
-<span id="cb8-267"><a href="#cb8-267" aria-hidden="true" tabindex="-1"></a><span class="in">    group1 = "Group 1",</span></span>
-<span id="cb8-268"><a href="#cb8-268" aria-hidden="true" tabindex="-1"></a><span class="in">    group2 = "Group 2",</span></span>
-<span id="cb8-269"><a href="#cb8-269" aria-hidden="true" tabindex="-1"></a><span class="in">    p.adj = "Adjusted p-value",</span></span>
-<span id="cb8-270"><a href="#cb8-270" aria-hidden="true" tabindex="-1"></a><span class="in">    p.adj.signif = "Significance Code",</span></span>
-<span id="cb8-271"><a href="#cb8-271" aria-hidden="true" tabindex="-1"></a><span class="in">    Significant = "Significant?"</span></span>
-<span id="cb8-272"><a href="#cb8-272" aria-hidden="true" tabindex="-1"></a><span class="in">  ) %&gt;%</span></span>
-<span id="cb8-273"><a href="#cb8-273" aria-hidden="true" tabindex="-1"></a><span class="in">  data_color(</span></span>
-<span id="cb8-274"><a href="#cb8-274" aria-hidden="true" tabindex="-1"></a><span class="in">    columns = c(p.adj),</span></span>
-<span id="cb8-275"><a href="#cb8-275" aria-hidden="true" tabindex="-1"></a><span class="in">    fn = scales::col_bin(c("red", "orange", "green"), bins = c(0, 0.05, 0.1, 1))</span></span>
-<span id="cb8-276"><a href="#cb8-276" aria-hidden="true" tabindex="-1"></a><span class="in">  ) %&gt;%</span></span>
-<span id="cb8-277"><a href="#cb8-277" aria-hidden="true" tabindex="-1"></a><span class="in">  tab_style(</span></span>
-<span id="cb8-278"><a href="#cb8-278" aria-hidden="true" tabindex="-1"></a><span class="in">    style = list(cell_text(weight = "bold")),</span></span>
-<span id="cb8-279"><a href="#cb8-279" aria-hidden="true" tabindex="-1"></a><span class="in">    locations = cells_body(columns = Significant, rows = Significant == "Yes")</span></span>
-<span id="cb8-280"><a href="#cb8-280" aria-hidden="true" tabindex="-1"></a><span class="in">  )</span></span>
-<span id="cb8-281"><a href="#cb8-281" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-282"><a href="#cb8-282" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb8-283"><a href="#cb8-283" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-284"><a href="#cb8-284" aria-hidden="true" tabindex="-1"></a>Apart from surprise and disgust, we can see that all other emotions present a clear-cut difference between negative and positive prompts.</span>
-<span id="cb8-285"><a href="#cb8-285" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-286"><a href="#cb8-286" aria-hidden="true" tabindex="-1"></a><span class="fu"># Experiment 2</span></span>
-<span id="cb8-287"><a href="#cb8-287" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-288"><a href="#cb8-288" aria-hidden="true" tabindex="-1"></a>A second experiment was proposed to find whether semantical or logical inconsistencies were present in the generated texts and were causing this imbalance. To do this, Google's *Gemma3* model was used as an annotator and instructed via a specific prompt to detect the aforementioned inconsistencies in the texts. The results indicate that almost none of the texts rated by the annotator model included inconsistencies with a total of only five texts containing semantical inconsistencies (around 0.8% of all considered instances).</span>
-<span id="cb8-289"><a href="#cb8-289" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-290"><a href="#cb8-290" aria-hidden="true" tabindex="-1"></a>To set up this experiment and try it a few steps need to be carried out:</span>
-<span id="cb8-291"><a href="#cb8-291" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-292"><a href="#cb8-292" aria-hidden="true" tabindex="-1"></a><span class="ss">1.  </span>set up Factgenie by referring to the official documentation available at <span class="ot">&lt;https://github.com/ufal/factgenie&gt;</span></span>
-<span id="cb8-293"><a href="#cb8-293" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-294"><a href="#cb8-294" aria-hidden="true" tabindex="-1"></a><span class="ss">2.  </span>run the <span class="in">`make_jsonl_input.py`</span> and <span class="in">`make_jsonl_output.py`</span> to prepare data for the analysis inside of the self-hosted web app offered by Factgenie</span>
-<span id="cb8-295"><a href="#cb8-295" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-296"><a href="#cb8-296" aria-hidden="true" tabindex="-1"></a><span class="ss">3.  </span>start up the app by running the following in a CLI instance:</span>
-<span id="cb8-297"><a href="#cb8-297" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-298"><a href="#cb8-298" aria-hidden="true" tabindex="-1"></a>    <span class="in">``` bash</span></span>
-<span id="cb8-299"><a href="#cb8-299" aria-hidden="true" tabindex="-1"></a>    <span class="ex">factgenie</span> run <span class="at">--host</span><span class="op">=</span>127.0.0.1 <span class="at">--port</span> 8890</span>
-<span id="cb8-300"><a href="#cb8-300" aria-hidden="true" tabindex="-1"></a>    <span class="in">```</span></span>
-<span id="cb8-301"><a href="#cb8-301" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-302"><a href="#cb8-302" aria-hidden="true" tabindex="-1"></a>    When inside the app we imported the data as instructed in the app setup by separating instances of prompts used to generate the texts from the outputs (i.e., the two <span class="in">`.jsonl`</span> files generated in step 2.</span>
-<span id="cb8-303"><a href="#cb8-303" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-304"><a href="#cb8-304" aria-hidden="true" tabindex="-1"></a>*Gemma3* wrote the annotations and showed that only 5 texts out of 590 showed semantical inconsistencies. The results are available in the <span class="in">`llm-eval-gemini27B.csv`</span> file.</span>
-<span id="cb8-305"><a href="#cb8-305" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-306"><a href="#cb8-306" aria-hidden="true" tabindex="-1"></a><span class="in">```{r, results='hide'}</span></span>
-<span id="cb8-307"><a href="#cb8-307" aria-hidden="true" tabindex="-1"></a><span class="in">llm_eval_gemini27B &lt;- read_csv("generated_data/llm-evals/llm-eval-gemini27B.csv")</span></span>
-<span id="cb8-308"><a href="#cb8-308" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb8-309"><a href="#cb8-309" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-310"><a href="#cb8-310" aria-hidden="true" tabindex="-1"></a><span class="in">```{r, echo=FALSE}</span></span>
-<span id="cb8-311"><a href="#cb8-311" aria-hidden="true" tabindex="-1"></a><span class="in">ggplot(llm_eval_gemini27B, aes(x = Category, y = Count, fill = Category)) +</span></span>
-<span id="cb8-312"><a href="#cb8-312" aria-hidden="true" tabindex="-1"></a><span class="in">  geom_col() +</span></span>
-<span id="cb8-313"><a href="#cb8-313" aria-hidden="true" tabindex="-1"></a><span class="in">  labs(title = "# of Inconsistencies Found (out of 590 rated texts)") +</span></span>
-<span id="cb8-314"><a href="#cb8-314" aria-hidden="true" tabindex="-1"></a><span class="in">  theme(plot.title = element_text(hjust = 0.5),</span></span>
-<span id="cb8-315"><a href="#cb8-315" aria-hidden="true" tabindex="-1"></a><span class="in">        axis.text.x = element_blank(),</span></span>
-<span id="cb8-316"><a href="#cb8-316" aria-hidden="true" tabindex="-1"></a><span class="in">        axis.title.x = element_blank())</span></span>
-<span id="cb8-317"><a href="#cb8-317" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<div class="sourceCode" id="cb10" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Hackaton Report - Code Review"</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="an">author:</span><span class="co"> Anthony Tricarico</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="an">format:</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="co">  html:</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="co">    theme: flatly</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="co">    toc: true</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="co">    number-sections: true</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="co">    code-fold: true</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="co">    code-tools: true</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="co">    df-print: paged</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="an">output-dir:</span><span class="co"> docs</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="fu"># Introduction</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>Understanding to what extent the results of a Large Language Model (LLM) can be trusted in text generation tasks is of fundamental importance nowadays. To this end, this technical report discusses the results of an experiment carried out using an open source LLM (Mistral) to understand how well this kind of model can represent the emotional context conveyed through a textual prompt. Mistral's model was instructed to generate texts following a prompt that could be either positively or negatively charged emotionally. Moreover, the temperature of the model was also manipulated to check for possible drifts from the given prompts with higher temperatures. The results of a semantic frame analysis are reported to show that the emotions that occur in an LLM-generated text are mostly in line with the expectations provided by the content of the prompt used to generate the text. Additional analyses are discussed to quantify semantical and logical correctness to show that open source LLMs perform very well for the task considered in the current experiment but are not immune to biases.</span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>This additional portion of the report goes through the technical steps and setup of the code used to produce the data and analyze it.</span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a><span class="fu"># Generating data</span></span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>Data for this experiment was produced in two steps. During the first iteration, carried out calling the API remotely, we asked the API to produce the entire sample of data (around 600 texts, 200 for each temperature level selected). However, we noticed that most of the texts produced with the highest temperature (1.3) were not usable and after cleaning them (in Python using the <span class="in">`clean_data.py`</span> script) we had to rebalance the groups and adjust for the dropped texts from the highest temperature group.</span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a><span class="in">``` python</span></span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a><span class="co">#! clean_data.py</span></span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a><span class="co"># function used to clean the data</span></span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> clean_df(df: pd.DataFrame) <span class="op">-&gt;</span> pd.DataFrame:</span>
+<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a>    <span class="co"># make text lowercase</span></span>
+<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a>    df[<span class="st">'text_lower'</span>] <span class="op">=</span> df[<span class="st">'text'</span>].<span class="bu">str</span>.lower()</span>
+<span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-34"><a href="#cb10-34" aria-hidden="true" tabindex="-1"></a>    <span class="co"># drop if text is shorter than 500 characters</span></span>
+<span id="cb10-35"><a href="#cb10-35" aria-hidden="true" tabindex="-1"></a>    min_length <span class="op">=</span> df[<span class="st">'text_lower'</span>].<span class="bu">str</span>.<span class="bu">len</span>() <span class="op">&gt;=</span> <span class="dv">500</span></span>
+<span id="cb10-36"><a href="#cb10-36" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-37"><a href="#cb10-37" aria-hidden="true" tabindex="-1"></a>    <span class="co"># check if text starts with parenthesis</span></span>
+<span id="cb10-38"><a href="#cb10-38" aria-hidden="true" tabindex="-1"></a>    parenthesis <span class="op">=</span> df[<span class="st">'text_lower'</span>].<span class="bu">str</span>.startswith(<span class="st">'('</span>)</span>
+<span id="cb10-39"><a href="#cb10-39" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-40"><a href="#cb10-40" aria-hidden="true" tabindex="-1"></a>    <span class="co"># check if non ascii letters are used</span></span>
+<span id="cb10-41"><a href="#cb10-41" aria-hidden="true" tabindex="-1"></a>    non_ascii_mask <span class="op">=</span> df[<span class="st">'text'</span>].<span class="bu">apply</span>(<span class="kw">lambda</span> x: <span class="kw">not</span> <span class="bu">all</span>(<span class="bu">ord</span>(char) <span class="op">&lt;</span> <span class="dv">128</span> <span class="cf">for</span> char <span class="kw">in</span> <span class="bu">str</span>(x)))</span>
+<span id="cb10-42"><a href="#cb10-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-43"><a href="#cb10-43" aria-hidden="true" tabindex="-1"></a>    df_cleaned <span class="op">=</span> df[(<span class="op">~</span>parenthesis) <span class="op">&amp;</span> (<span class="op">~</span>non_ascii_mask) <span class="op">&amp;</span> (min_length)]</span>
+<span id="cb10-44"><a href="#cb10-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-45"><a href="#cb10-45" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> df_cleaned</span>
+<span id="cb10-46"><a href="#cb10-46" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb10-47"><a href="#cb10-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-48"><a href="#cb10-48" aria-hidden="true" tabindex="-1"></a>To this end, the second iteration of the text generation happened. This time, however, the same Mistral model was run locally using the framework provided by <span class="in">`ollama`</span> and exploiting the connection to the locally hosted API. The texts produced in this fashion passed all cleaning tests and were included in the final dataset by running the <span class="in">`clean_data.py`</span> script and saving the final merged dataset in <span class="in">`.csv`</span> format. The last step was to compute $z$-scores for each emotion embedded in the generated texts using the <span class="in">`create_emotions_df.py`</span> script. The final dataset (<span class="in">`emotions.csv)`</span> was then saved and was used for the subsequent analyses. After performing this step, no more data cleaning was needed.</span>
+<span id="cb10-49"><a href="#cb10-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-50"><a href="#cb10-50" aria-hidden="true" tabindex="-1"></a><span class="in">``` python</span></span>
+<span id="cb10-51"><a href="#cb10-51" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> emoatlas <span class="im">import</span> EmoScores</span>
+<span id="cb10-52"><a href="#cb10-52" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb10-53"><a href="#cb10-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-54"><a href="#cb10-54" aria-hidden="true" tabindex="-1"></a><span class="co"># compute emotion scores</span></span>
+<span id="cb10-55"><a href="#cb10-55" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> compute_scores(df: pd.DataFrame, n <span class="op">=</span> <span class="op">-</span><span class="dv">1</span>):</span>
+<span id="cb10-56"><a href="#cb10-56" aria-hidden="true" tabindex="-1"></a>    emos <span class="op">=</span> EmoScores()</span>
+<span id="cb10-57"><a href="#cb10-57" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-58"><a href="#cb10-58" aria-hidden="true" tabindex="-1"></a>    <span class="co"># initialize empty dictionary to store the scores</span></span>
+<span id="cb10-59"><a href="#cb10-59" aria-hidden="true" tabindex="-1"></a>    dct <span class="op">=</span> {</span>
+<span id="cb10-60"><a href="#cb10-60" aria-hidden="true" tabindex="-1"></a>      <span class="st">'anger'</span> : <span class="bu">list</span>(),</span>
+<span id="cb10-61"><a href="#cb10-61" aria-hidden="true" tabindex="-1"></a>      <span class="st">'trust'</span> : <span class="bu">list</span>(),</span>
+<span id="cb10-62"><a href="#cb10-62" aria-hidden="true" tabindex="-1"></a>      <span class="st">'surprise'</span> : <span class="bu">list</span>(), </span>
+<span id="cb10-63"><a href="#cb10-63" aria-hidden="true" tabindex="-1"></a>      <span class="st">'disgust'</span> : <span class="bu">list</span>(),</span>
+<span id="cb10-64"><a href="#cb10-64" aria-hidden="true" tabindex="-1"></a>      <span class="st">'joy'</span> : <span class="bu">list</span>(),</span>
+<span id="cb10-65"><a href="#cb10-65" aria-hidden="true" tabindex="-1"></a>      <span class="st">'sadness'</span> : <span class="bu">list</span>(),</span>
+<span id="cb10-66"><a href="#cb10-66" aria-hidden="true" tabindex="-1"></a>      <span class="st">'fear'</span> : <span class="bu">list</span>(),</span>
+<span id="cb10-67"><a href="#cb10-67" aria-hidden="true" tabindex="-1"></a>      <span class="st">'anticipation'</span> : <span class="bu">list</span>()</span>
+<span id="cb10-68"><a href="#cb10-68" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb10-69"><a href="#cb10-69" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-70"><a href="#cb10-70" aria-hidden="true" tabindex="-1"></a>    <span class="co"># compute score for each text in the df</span></span>
+<span id="cb10-71"><a href="#cb10-71" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(df)):</span>
+<span id="cb10-72"><a href="#cb10-72" aria-hidden="true" tabindex="-1"></a>        text <span class="op">=</span> df[<span class="st">'text'</span>].iloc[i]</span>
+<span id="cb10-73"><a href="#cb10-73" aria-hidden="true" tabindex="-1"></a>        <span class="co"># compute emotional scores using EmoAtlas</span></span>
+<span id="cb10-74"><a href="#cb10-74" aria-hidden="true" tabindex="-1"></a>        scores <span class="op">=</span> emos.zscores(text)</span>
+<span id="cb10-75"><a href="#cb10-75" aria-hidden="true" tabindex="-1"></a>        <span class="co"># append to each emotion the score for the current text</span></span>
+<span id="cb10-76"><a href="#cb10-76" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> k <span class="kw">in</span> scores:</span>
+<span id="cb10-77"><a href="#cb10-77" aria-hidden="true" tabindex="-1"></a>            dct[k].append(scores[k])</span>
+<span id="cb10-78"><a href="#cb10-78" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-79"><a href="#cb10-79" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> dct</span>
+<span id="cb10-80"><a href="#cb10-80" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb10-81"><a href="#cb10-81" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-82"><a href="#cb10-82" aria-hidden="true" tabindex="-1"></a><span class="fu"># Experiment 1 - Statistical Analysis</span></span>
+<span id="cb10-83"><a href="#cb10-83" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-84"><a href="#cb10-84" aria-hidden="true" tabindex="-1"></a>The analysis for the first study was carried out using <span class="in">`R`</span> version 4.4.3 and the following packages:</span>
+<span id="cb10-85"><a href="#cb10-85" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-88"><a href="#cb10-88" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb10-89"><a href="#cb10-89" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(pacman)</span>
+<span id="cb10-90"><a href="#cb10-90" aria-hidden="true" tabindex="-1"></a><span class="fu">p_load</span>(tidyverse, ggplot2, readr, janitor, psych, ggthemes, car, stringr ,rstatix, patchwork, gridExtra, gt)</span>
+<span id="cb10-91"><a href="#cb10-91" aria-hidden="true" tabindex="-1"></a><span class="fu">theme_set</span>(<span class="fu">theme_minimal</span>())</span>
+<span id="cb10-92"><a href="#cb10-92" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb10-93"><a href="#cb10-93" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-94"><a href="#cb10-94" aria-hidden="true" tabindex="-1"></a>Data was then imported:</span>
+<span id="cb10-95"><a href="#cb10-95" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-96"><a href="#cb10-96" aria-hidden="true" tabindex="-1"></a><span class="in">```{r, echo=TRUE, output = FALSE}</span></span>
+<span id="cb10-97"><a href="#cb10-97" aria-hidden="true" tabindex="-1"></a><span class="in">emotions &lt;- read_csv("generated_data/cleaned/emotions.csv")</span></span>
+<span id="cb10-98"><a href="#cb10-98" aria-hidden="true" tabindex="-1"></a><span class="in"># remove first two columns, keep all others</span></span>
+<span id="cb10-99"><a href="#cb10-99" aria-hidden="true" tabindex="-1"></a><span class="in">emotions &lt;- emotions[, 3:length(emotions)]</span></span>
+<span id="cb10-100"><a href="#cb10-100" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb10-101"><a href="#cb10-101" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-102"><a href="#cb10-102" aria-hidden="true" tabindex="-1"></a><span class="fu">## Data pre-processing</span></span>
+<span id="cb10-103"><a href="#cb10-103" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-104"><a href="#cb10-104" aria-hidden="true" tabindex="-1"></a>The first step in preparing this analysis is to declare the groups and specify their partitioning in the dataframe.</span>
+<span id="cb10-105"><a href="#cb10-105" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-106"><a href="#cb10-106" aria-hidden="true" tabindex="-1"></a><span class="in">```{r, echo=FALSE}</span></span>
+<span id="cb10-107"><a href="#cb10-107" aria-hidden="true" tabindex="-1"></a><span class="in"># cleans the names in the dataset, removing whitespaces from the column name</span></span>
+<span id="cb10-108"><a href="#cb10-108" aria-hidden="true" tabindex="-1"></a><span class="in">emotions &lt;- clean_names(emotions)</span></span>
+<span id="cb10-109"><a href="#cb10-109" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-110"><a href="#cb10-110" aria-hidden="true" tabindex="-1"></a><span class="in"># creates a condition and initializes it as a factor</span></span>
+<span id="cb10-111"><a href="#cb10-111" aria-hidden="true" tabindex="-1"></a><span class="in">emotions &lt;- emotions %&gt;% </span></span>
+<span id="cb10-112"><a href="#cb10-112" aria-hidden="true" tabindex="-1"></a><span class="in">  mutate(condition = paste(substr(type_of_prompt, 1, 1), temperature, sep = '+'),</span></span>
+<span id="cb10-113"><a href="#cb10-113" aria-hidden="true" tabindex="-1"></a><span class="in">         condition = as.factor(condition),</span></span>
+<span id="cb10-114"><a href="#cb10-114" aria-hidden="true" tabindex="-1"></a><span class="in">         type_of_prompt = as.factor(type_of_prompt),</span></span>
+<span id="cb10-115"><a href="#cb10-115" aria-hidden="true" tabindex="-1"></a><span class="in">         temperature = as.factor(temperature))</span></span>
+<span id="cb10-116"><a href="#cb10-116" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb10-117"><a href="#cb10-117" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-118"><a href="#cb10-118" aria-hidden="true" tabindex="-1"></a>Then, it is informative to look at different summary statistics for each condition.</span>
+<span id="cb10-119"><a href="#cb10-119" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-120"><a href="#cb10-120" aria-hidden="true" tabindex="-1"></a><span class="in">```{r, eval=FALSE}</span></span>
+<span id="cb10-121"><a href="#cb10-121" aria-hidden="true" tabindex="-1"></a><span class="in"># check summary statistics by condition</span></span>
+<span id="cb10-122"><a href="#cb10-122" aria-hidden="true" tabindex="-1"></a><span class="in">describeBy(emotions ~ condition)</span></span>
+<span id="cb10-123"><a href="#cb10-123" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb10-124"><a href="#cb10-124" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-125"><a href="#cb10-125" aria-hidden="true" tabindex="-1"></a><span class="fu">## Assumption checks for ANOVA</span></span>
+<span id="cb10-126"><a href="#cb10-126" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-127"><a href="#cb10-127" aria-hidden="true" tabindex="-1"></a>When comparing multiple means, the first test that comes to mind is ANOVA. However, since it is a parametric test, it is important to check if the assumption that it makes on data are respected. The two main assumptions of ANOVA are:</span>
+<span id="cb10-128"><a href="#cb10-128" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-129"><a href="#cb10-129" aria-hidden="true" tabindex="-1"></a><span class="ss">1.  </span>The dependent variable is normally distributed across groups</span>
+<span id="cb10-130"><a href="#cb10-130" aria-hidden="true" tabindex="-1"></a><span class="ss">2.  </span>The dependent variable shares the same variance across groups</span>
+<span id="cb10-131"><a href="#cb10-131" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-132"><a href="#cb10-132" aria-hidden="true" tabindex="-1"></a>To check those assumptions, two tests are usually employed: Shapiro-Wilk's test, and Levene's test. If any one of those tests returns a statistically significant result for any emotion, then it means that ANOVA cannot be used as the data violates the basic assumptions that it makes. A level of significance $\alpha$ of 5% is used to interpret statistical significance for those tests.</span>
+<span id="cb10-133"><a href="#cb10-133" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-134"><a href="#cb10-134" aria-hidden="true" tabindex="-1"></a>Below follows a summary of the results from the tests:</span>
+<span id="cb10-135"><a href="#cb10-135" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-136"><a href="#cb10-136" aria-hidden="true" tabindex="-1"></a><span class="in">```{r, echo=FALSE}</span></span>
+<span id="cb10-137"><a href="#cb10-137" aria-hidden="true" tabindex="-1"></a><span class="in"># Emotions to test</span></span>
+<span id="cb10-138"><a href="#cb10-138" aria-hidden="true" tabindex="-1"></a><span class="in">emotions_list &lt;- c("anger", "trust", "surprise", "disgust", "joy", "sadness", "fear", "anticipation")</span></span>
+<span id="cb10-139"><a href="#cb10-139" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-140"><a href="#cb10-140" aria-hidden="true" tabindex="-1"></a><span class="in"># Run Levene's tests and collect results</span></span>
+<span id="cb10-141"><a href="#cb10-141" aria-hidden="true" tabindex="-1"></a><span class="in">levene_results &lt;- lapply(emotions_list, function(emotion) {</span></span>
+<span id="cb10-142"><a href="#cb10-142" aria-hidden="true" tabindex="-1"></a><span class="in">  formula &lt;- as.formula(paste(emotion, "~ condition"))</span></span>
+<span id="cb10-143"><a href="#cb10-143" aria-hidden="true" tabindex="-1"></a><span class="in">  test &lt;- leveneTest(formula, data = emotions)</span></span>
+<span id="cb10-144"><a href="#cb10-144" aria-hidden="true" tabindex="-1"></a><span class="in">  data.frame(</span></span>
+<span id="cb10-145"><a href="#cb10-145" aria-hidden="true" tabindex="-1"></a><span class="in">    Emotion = emotion,</span></span>
+<span id="cb10-146"><a href="#cb10-146" aria-hidden="true" tabindex="-1"></a><span class="in">    F_value = round(test[1, "F value"], 2),</span></span>
+<span id="cb10-147"><a href="#cb10-147" aria-hidden="true" tabindex="-1"></a><span class="in">    df1 = test[1, "Df"],</span></span>
+<span id="cb10-148"><a href="#cb10-148" aria-hidden="true" tabindex="-1"></a><span class="in">    df2 = test[2, "Df"],</span></span>
+<span id="cb10-149"><a href="#cb10-149" aria-hidden="true" tabindex="-1"></a><span class="in">    p_value = round(test[1, "Pr(&gt;F)"], 4),</span></span>
+<span id="cb10-150"><a href="#cb10-150" aria-hidden="true" tabindex="-1"></a><span class="in">    Equal_Variance = ifelse(test[1, "Pr(&gt;F)"] &lt; 0.05, "No", "Yes")</span></span>
+<span id="cb10-151"><a href="#cb10-151" aria-hidden="true" tabindex="-1"></a><span class="in">  )</span></span>
+<span id="cb10-152"><a href="#cb10-152" aria-hidden="true" tabindex="-1"></a><span class="in">})</span></span>
+<span id="cb10-153"><a href="#cb10-153" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-154"><a href="#cb10-154" aria-hidden="true" tabindex="-1"></a><span class="in">levene_df &lt;- bind_rows(levene_results)</span></span>
+<span id="cb10-155"><a href="#cb10-155" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-156"><a href="#cb10-156" aria-hidden="true" tabindex="-1"></a><span class="in"># Format table with gt</span></span>
+<span id="cb10-157"><a href="#cb10-157" aria-hidden="true" tabindex="-1"></a><span class="in">levene_df %&gt;%</span></span>
+<span id="cb10-158"><a href="#cb10-158" aria-hidden="true" tabindex="-1"></a><span class="in">  gt() %&gt;%</span></span>
+<span id="cb10-159"><a href="#cb10-159" aria-hidden="true" tabindex="-1"></a><span class="in">  tab_header(</span></span>
+<span id="cb10-160"><a href="#cb10-160" aria-hidden="true" tabindex="-1"></a><span class="in">    title = "Levene's Test for Homogeneity of Variance by Emotion"</span></span>
+<span id="cb10-161"><a href="#cb10-161" aria-hidden="true" tabindex="-1"></a><span class="in">  ) %&gt;%</span></span>
+<span id="cb10-162"><a href="#cb10-162" aria-hidden="true" tabindex="-1"></a><span class="in">  cols_label(</span></span>
+<span id="cb10-163"><a href="#cb10-163" aria-hidden="true" tabindex="-1"></a><span class="in">    F_value = "F Value",</span></span>
+<span id="cb10-164"><a href="#cb10-164" aria-hidden="true" tabindex="-1"></a><span class="in">    df1 = "df1",</span></span>
+<span id="cb10-165"><a href="#cb10-165" aria-hidden="true" tabindex="-1"></a><span class="in">    df2 = "df2",</span></span>
+<span id="cb10-166"><a href="#cb10-166" aria-hidden="true" tabindex="-1"></a><span class="in">    p_value = "p-value",</span></span>
+<span id="cb10-167"><a href="#cb10-167" aria-hidden="true" tabindex="-1"></a><span class="in">    Equal_Variance = "Equal Variance?"</span></span>
+<span id="cb10-168"><a href="#cb10-168" aria-hidden="true" tabindex="-1"></a><span class="in">  ) %&gt;%</span></span>
+<span id="cb10-169"><a href="#cb10-169" aria-hidden="true" tabindex="-1"></a><span class="in">  data_color(</span></span>
+<span id="cb10-170"><a href="#cb10-170" aria-hidden="true" tabindex="-1"></a><span class="in">    columns = c(p_value),</span></span>
+<span id="cb10-171"><a href="#cb10-171" aria-hidden="true" tabindex="-1"></a><span class="in">    fn = scales::col_bin(c("red", "orange", "green"), bins = c(0, 0.05, 0.1, 1))</span></span>
+<span id="cb10-172"><a href="#cb10-172" aria-hidden="true" tabindex="-1"></a><span class="in">  ) %&gt;%</span></span>
+<span id="cb10-173"><a href="#cb10-173" aria-hidden="true" tabindex="-1"></a><span class="in">  tab_style(</span></span>
+<span id="cb10-174"><a href="#cb10-174" aria-hidden="true" tabindex="-1"></a><span class="in">    style = list(cell_text(weight = "bold")),</span></span>
+<span id="cb10-175"><a href="#cb10-175" aria-hidden="true" tabindex="-1"></a><span class="in">    locations = cells_body(columns = Equal_Variance, rows = Equal_Variance == "No")</span></span>
+<span id="cb10-176"><a href="#cb10-176" aria-hidden="true" tabindex="-1"></a><span class="in">  )</span></span>
+<span id="cb10-177"><a href="#cb10-177" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-178"><a href="#cb10-178" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb10-179"><a href="#cb10-179" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-180"><a href="#cb10-180" aria-hidden="true" tabindex="-1"></a><span class="in">```{r, echo=FALSE}</span></span>
+<span id="cb10-181"><a href="#cb10-181" aria-hidden="true" tabindex="-1"></a><span class="in"># Emotions to test</span></span>
+<span id="cb10-182"><a href="#cb10-182" aria-hidden="true" tabindex="-1"></a><span class="in">emotions_list &lt;- c("anger", "trust", "surprise", "disgust", "joy", "sadness", "fear", "anticipation")</span></span>
+<span id="cb10-183"><a href="#cb10-183" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-184"><a href="#cb10-184" aria-hidden="true" tabindex="-1"></a><span class="in"># Run Shapiro-Wilk tests and collect results</span></span>
+<span id="cb10-185"><a href="#cb10-185" aria-hidden="true" tabindex="-1"></a><span class="in">shapiro_results &lt;- lapply(emotions_list, function(emotion) {</span></span>
+<span id="cb10-186"><a href="#cb10-186" aria-hidden="true" tabindex="-1"></a><span class="in">  results &lt;- emotions %&gt;%</span></span>
+<span id="cb10-187"><a href="#cb10-187" aria-hidden="true" tabindex="-1"></a><span class="in">    group_by(condition) %&gt;%</span></span>
+<span id="cb10-188"><a href="#cb10-188" aria-hidden="true" tabindex="-1"></a><span class="in">    summarise(</span></span>
+<span id="cb10-189"><a href="#cb10-189" aria-hidden="true" tabindex="-1"></a><span class="in">      p_value = tryCatch(</span></span>
+<span id="cb10-190"><a href="#cb10-190" aria-hidden="true" tabindex="-1"></a><span class="in">        shapiro.test(get(emotion))$p.value,</span></span>
+<span id="cb10-191"><a href="#cb10-191" aria-hidden="true" tabindex="-1"></a><span class="in">        error = function(e) NA</span></span>
+<span id="cb10-192"><a href="#cb10-192" aria-hidden="true" tabindex="-1"></a><span class="in">      ),</span></span>
+<span id="cb10-193"><a href="#cb10-193" aria-hidden="true" tabindex="-1"></a><span class="in">      .groups = "drop"</span></span>
+<span id="cb10-194"><a href="#cb10-194" aria-hidden="true" tabindex="-1"></a><span class="in">    ) %&gt;%</span></span>
+<span id="cb10-195"><a href="#cb10-195" aria-hidden="true" tabindex="-1"></a><span class="in">    mutate(</span></span>
+<span id="cb10-196"><a href="#cb10-196" aria-hidden="true" tabindex="-1"></a><span class="in">      Emotion = emotion,</span></span>
+<span id="cb10-197"><a href="#cb10-197" aria-hidden="true" tabindex="-1"></a><span class="in">      Normal_Distribution = ifelse(p_value &lt; 0.05, "No", "Yes"),</span></span>
+<span id="cb10-198"><a href="#cb10-198" aria-hidden="true" tabindex="-1"></a><span class="in">      p_value = round(p_value, 4)</span></span>
+<span id="cb10-199"><a href="#cb10-199" aria-hidden="true" tabindex="-1"></a><span class="in">    ) %&gt;%</span></span>
+<span id="cb10-200"><a href="#cb10-200" aria-hidden="true" tabindex="-1"></a><span class="in">    select(Emotion, condition, p_value, Normal_Distribution)</span></span>
+<span id="cb10-201"><a href="#cb10-201" aria-hidden="true" tabindex="-1"></a><span class="in">  return(results)</span></span>
+<span id="cb10-202"><a href="#cb10-202" aria-hidden="true" tabindex="-1"></a><span class="in">})</span></span>
+<span id="cb10-203"><a href="#cb10-203" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-204"><a href="#cb10-204" aria-hidden="true" tabindex="-1"></a><span class="in">shapiro_df &lt;- bind_rows(shapiro_results)</span></span>
+<span id="cb10-205"><a href="#cb10-205" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-206"><a href="#cb10-206" aria-hidden="true" tabindex="-1"></a><span class="in"># Format table with gt</span></span>
+<span id="cb10-207"><a href="#cb10-207" aria-hidden="true" tabindex="-1"></a><span class="in">shapiro_df %&gt;%</span></span>
+<span id="cb10-208"><a href="#cb10-208" aria-hidden="true" tabindex="-1"></a><span class="in">  gt() %&gt;%</span></span>
+<span id="cb10-209"><a href="#cb10-209" aria-hidden="true" tabindex="-1"></a><span class="in">  tab_header(</span></span>
+<span id="cb10-210"><a href="#cb10-210" aria-hidden="true" tabindex="-1"></a><span class="in">    title = "Shapiro-Wilk Test for Normality by Emotion and Condition"</span></span>
+<span id="cb10-211"><a href="#cb10-211" aria-hidden="true" tabindex="-1"></a><span class="in">  ) %&gt;%</span></span>
+<span id="cb10-212"><a href="#cb10-212" aria-hidden="true" tabindex="-1"></a><span class="in">  cols_label(</span></span>
+<span id="cb10-213"><a href="#cb10-213" aria-hidden="true" tabindex="-1"></a><span class="in">    condition = "Condition",</span></span>
+<span id="cb10-214"><a href="#cb10-214" aria-hidden="true" tabindex="-1"></a><span class="in">    p_value = "p-value",</span></span>
+<span id="cb10-215"><a href="#cb10-215" aria-hidden="true" tabindex="-1"></a><span class="in">    Normal_Distribution = "Normal?"</span></span>
+<span id="cb10-216"><a href="#cb10-216" aria-hidden="true" tabindex="-1"></a><span class="in">  ) %&gt;%</span></span>
+<span id="cb10-217"><a href="#cb10-217" aria-hidden="true" tabindex="-1"></a><span class="in">  data_color(</span></span>
+<span id="cb10-218"><a href="#cb10-218" aria-hidden="true" tabindex="-1"></a><span class="in">    columns = c(p_value),</span></span>
+<span id="cb10-219"><a href="#cb10-219" aria-hidden="true" tabindex="-1"></a><span class="in">    fn = scales::col_bin(c("red", "orange", "green"), bins = c(0, 0.05, 0.1, 1))</span></span>
+<span id="cb10-220"><a href="#cb10-220" aria-hidden="true" tabindex="-1"></a><span class="in">  ) %&gt;%</span></span>
+<span id="cb10-221"><a href="#cb10-221" aria-hidden="true" tabindex="-1"></a><span class="in">  tab_style(</span></span>
+<span id="cb10-222"><a href="#cb10-222" aria-hidden="true" tabindex="-1"></a><span class="in">    style = list(cell_text(weight = "bold")),</span></span>
+<span id="cb10-223"><a href="#cb10-223" aria-hidden="true" tabindex="-1"></a><span class="in">    locations = cells_body(columns = Normal_Distribution, rows = Normal_Distribution == "No")</span></span>
+<span id="cb10-224"><a href="#cb10-224" aria-hidden="true" tabindex="-1"></a><span class="in">  )</span></span>
+<span id="cb10-225"><a href="#cb10-225" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb10-226"><a href="#cb10-226" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-227"><a href="#cb10-227" aria-hidden="true" tabindex="-1"></a>As it is possible to observe these departures from the assumptions it becomes necessary to use non-parametric alternatives to the ANOVA test.</span>
+<span id="cb10-228"><a href="#cb10-228" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-229"><a href="#cb10-229" aria-hidden="true" tabindex="-1"></a><span class="fu">## Kruskal-Wallis Test</span></span>
+<span id="cb10-230"><a href="#cb10-230" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-231"><a href="#cb10-231" aria-hidden="true" tabindex="-1"></a>This is an alternative to the ANOVA test and can be used for this specific dataset. As in the ANOVA test if the null hypothesis is rejected, then we know at least one group is different on average compared to another. The results for this test are reported below.</span>
+<span id="cb10-232"><a href="#cb10-232" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-233"><a href="#cb10-233" aria-hidden="true" tabindex="-1"></a><span class="in">```{r, echo=FALSE}</span></span>
+<span id="cb10-234"><a href="#cb10-234" aria-hidden="true" tabindex="-1"></a><span class="in"># Emotions to test</span></span>
+<span id="cb10-235"><a href="#cb10-235" aria-hidden="true" tabindex="-1"></a><span class="in">emotions_list &lt;- c("anger", "trust", "surprise", "disgust", "joy", "sadness", "fear", "anticipation")</span></span>
+<span id="cb10-236"><a href="#cb10-236" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-237"><a href="#cb10-237" aria-hidden="true" tabindex="-1"></a><span class="in"># Run Kruskal-Wallis tests and collect results</span></span>
+<span id="cb10-238"><a href="#cb10-238" aria-hidden="true" tabindex="-1"></a><span class="in">kruskal_results &lt;- lapply(emotions_list, function(emotion) {</span></span>
+<span id="cb10-239"><a href="#cb10-239" aria-hidden="true" tabindex="-1"></a><span class="in">  formula &lt;- as.formula(paste(emotion, "~ condition"))</span></span>
+<span id="cb10-240"><a href="#cb10-240" aria-hidden="true" tabindex="-1"></a><span class="in">  test &lt;- kruskal.test(formula, data = emotions)</span></span>
+<span id="cb10-241"><a href="#cb10-241" aria-hidden="true" tabindex="-1"></a><span class="in">  data.frame(</span></span>
+<span id="cb10-242"><a href="#cb10-242" aria-hidden="true" tabindex="-1"></a><span class="in">    Emotion = emotion,</span></span>
+<span id="cb10-243"><a href="#cb10-243" aria-hidden="true" tabindex="-1"></a><span class="in">    Chi_squared = round(test$statistic, 2),</span></span>
+<span id="cb10-244"><a href="#cb10-244" aria-hidden="true" tabindex="-1"></a><span class="in">    df = test$parameter,</span></span>
+<span id="cb10-245"><a href="#cb10-245" aria-hidden="true" tabindex="-1"></a><span class="in">    p_value = round(test$p.value, 4),</span></span>
+<span id="cb10-246"><a href="#cb10-246" aria-hidden="true" tabindex="-1"></a><span class="in">    Significant_Difference = ifelse(test$p.value &lt; 0.05, "Yes", "No")</span></span>
+<span id="cb10-247"><a href="#cb10-247" aria-hidden="true" tabindex="-1"></a><span class="in">  )</span></span>
+<span id="cb10-248"><a href="#cb10-248" aria-hidden="true" tabindex="-1"></a><span class="in">})</span></span>
+<span id="cb10-249"><a href="#cb10-249" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-250"><a href="#cb10-250" aria-hidden="true" tabindex="-1"></a><span class="in">kruskal_df &lt;- bind_rows(kruskal_results)</span></span>
+<span id="cb10-251"><a href="#cb10-251" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-252"><a href="#cb10-252" aria-hidden="true" tabindex="-1"></a><span class="in"># Format table with gt</span></span>
+<span id="cb10-253"><a href="#cb10-253" aria-hidden="true" tabindex="-1"></a><span class="in">kruskal_df %&gt;%</span></span>
+<span id="cb10-254"><a href="#cb10-254" aria-hidden="true" tabindex="-1"></a><span class="in">  gt() %&gt;%</span></span>
+<span id="cb10-255"><a href="#cb10-255" aria-hidden="true" tabindex="-1"></a><span class="in">  tab_header(</span></span>
+<span id="cb10-256"><a href="#cb10-256" aria-hidden="true" tabindex="-1"></a><span class="in">    title = "Kruskal-Wallis Test Results by Emotion"</span></span>
+<span id="cb10-257"><a href="#cb10-257" aria-hidden="true" tabindex="-1"></a><span class="in">  ) %&gt;%</span></span>
+<span id="cb10-258"><a href="#cb10-258" aria-hidden="true" tabindex="-1"></a><span class="in">  cols_label(</span></span>
+<span id="cb10-259"><a href="#cb10-259" aria-hidden="true" tabindex="-1"></a><span class="in">    Chi_squared = "Chi-squared",</span></span>
+<span id="cb10-260"><a href="#cb10-260" aria-hidden="true" tabindex="-1"></a><span class="in">    df = "df",</span></span>
+<span id="cb10-261"><a href="#cb10-261" aria-hidden="true" tabindex="-1"></a><span class="in">    p_value = "p-value",</span></span>
+<span id="cb10-262"><a href="#cb10-262" aria-hidden="true" tabindex="-1"></a><span class="in">    Significant_Difference = "Significant Difference?"</span></span>
+<span id="cb10-263"><a href="#cb10-263" aria-hidden="true" tabindex="-1"></a><span class="in">  ) %&gt;%</span></span>
+<span id="cb10-264"><a href="#cb10-264" aria-hidden="true" tabindex="-1"></a><span class="in">  data_color(</span></span>
+<span id="cb10-265"><a href="#cb10-265" aria-hidden="true" tabindex="-1"></a><span class="in">    columns = c(p_value),</span></span>
+<span id="cb10-266"><a href="#cb10-266" aria-hidden="true" tabindex="-1"></a><span class="in">    fn = scales::col_bin(c("green", "orange", "red"), bins = c(0, 0.05, 0.1, 1))</span></span>
+<span id="cb10-267"><a href="#cb10-267" aria-hidden="true" tabindex="-1"></a><span class="in">  ) %&gt;%</span></span>
+<span id="cb10-268"><a href="#cb10-268" aria-hidden="true" tabindex="-1"></a><span class="in">  tab_style(</span></span>
+<span id="cb10-269"><a href="#cb10-269" aria-hidden="true" tabindex="-1"></a><span class="in">    style = list(cell_text(weight = "bold")),</span></span>
+<span id="cb10-270"><a href="#cb10-270" aria-hidden="true" tabindex="-1"></a><span class="in">    locations = cells_body(columns = Significant_Difference, rows = Significant_Difference == "Yes")</span></span>
+<span id="cb10-271"><a href="#cb10-271" aria-hidden="true" tabindex="-1"></a><span class="in">  )</span></span>
+<span id="cb10-272"><a href="#cb10-272" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-273"><a href="#cb10-273" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb10-274"><a href="#cb10-274" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-275"><a href="#cb10-275" aria-hidden="true" tabindex="-1"></a>Then similarly to ANOVA, also this test needs to be followed up by a post-hoc which in this case is represented by the t-test non-parametric counterpart: Dunn's test.</span>
+<span id="cb10-276"><a href="#cb10-276" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-277"><a href="#cb10-277" aria-hidden="true" tabindex="-1"></a><span class="fu">### Dunn's test as post-hoc follow up</span></span>
+<span id="cb10-278"><a href="#cb10-278" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-279"><a href="#cb10-279" aria-hidden="true" tabindex="-1"></a><span class="in">```{r, eval=FALSE}</span></span>
+<span id="cb10-280"><a href="#cb10-280" aria-hidden="true" tabindex="-1"></a><span class="in"># only one significant difference between p+0.7 and p+1.3</span></span>
+<span id="cb10-281"><a href="#cb10-281" aria-hidden="true" tabindex="-1"></a><span class="in">dunn_test(emotions, surprise~condition,</span></span>
+<span id="cb10-282"><a href="#cb10-282" aria-hidden="true" tabindex="-1"></a><span class="in">                     p.adjust.method = "BH")</span></span>
+<span id="cb10-283"><a href="#cb10-283" aria-hidden="true" tabindex="-1"></a><span class="in"># evidence of some difference in disgust between negative and positive prompt</span></span>
+<span id="cb10-284"><a href="#cb10-284" aria-hidden="true" tabindex="-1"></a><span class="in">dunn_test(emotions, disgust~condition,</span></span>
+<span id="cb10-285"><a href="#cb10-285" aria-hidden="true" tabindex="-1"></a><span class="in">          p.adjust.method = "BH")</span></span>
+<span id="cb10-286"><a href="#cb10-286" aria-hidden="true" tabindex="-1"></a><span class="in"># clear-cut difference in joy between negative and positive prompt</span></span>
+<span id="cb10-287"><a href="#cb10-287" aria-hidden="true" tabindex="-1"></a><span class="in">dunn_test(emotions, joy~condition,</span></span>
+<span id="cb10-288"><a href="#cb10-288" aria-hidden="true" tabindex="-1"></a><span class="in">          p.adjust.method = "BH")</span></span>
+<span id="cb10-289"><a href="#cb10-289" aria-hidden="true" tabindex="-1"></a><span class="in"># clear-cut difference in sadness between negative and positive prompt</span></span>
+<span id="cb10-290"><a href="#cb10-290" aria-hidden="true" tabindex="-1"></a><span class="in">dunn_test(emotions, sadness~condition,</span></span>
+<span id="cb10-291"><a href="#cb10-291" aria-hidden="true" tabindex="-1"></a><span class="in">          p.adjust.method = "BH")</span></span>
+<span id="cb10-292"><a href="#cb10-292" aria-hidden="true" tabindex="-1"></a><span class="in"># clear-cut difference in fear between negative and positive prompt</span></span>
+<span id="cb10-293"><a href="#cb10-293" aria-hidden="true" tabindex="-1"></a><span class="in">dunn_test(emotions, fear~condition,</span></span>
+<span id="cb10-294"><a href="#cb10-294" aria-hidden="true" tabindex="-1"></a><span class="in">          p.adjust.method = "BH")</span></span>
+<span id="cb10-295"><a href="#cb10-295" aria-hidden="true" tabindex="-1"></a><span class="in"># clear-cut difference in anticipation between negative and positive prompt</span></span>
+<span id="cb10-296"><a href="#cb10-296" aria-hidden="true" tabindex="-1"></a><span class="in">dunn_test(emotions, anticipation~condition,</span></span>
+<span id="cb10-297"><a href="#cb10-297" aria-hidden="true" tabindex="-1"></a><span class="in">          p.adjust.method = "BH")</span></span>
+<span id="cb10-298"><a href="#cb10-298" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb10-299"><a href="#cb10-299" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-300"><a href="#cb10-300" aria-hidden="true" tabindex="-1"></a><span class="in">```{r, echo=FALSE}</span></span>
+<span id="cb10-301"><a href="#cb10-301" aria-hidden="true" tabindex="-1"></a><span class="in"># Emotions to test</span></span>
+<span id="cb10-302"><a href="#cb10-302" aria-hidden="true" tabindex="-1"></a><span class="in">emotions_list &lt;- c("surprise", "disgust", "joy", "sadness", "fear", "anticipation")</span></span>
+<span id="cb10-303"><a href="#cb10-303" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-304"><a href="#cb10-304" aria-hidden="true" tabindex="-1"></a><span class="in"># Run Dunn's tests and collect results</span></span>
+<span id="cb10-305"><a href="#cb10-305" aria-hidden="true" tabindex="-1"></a><span class="in">dunn_results &lt;- lapply(emotions_list, function(emotion) {</span></span>
+<span id="cb10-306"><a href="#cb10-306" aria-hidden="true" tabindex="-1"></a><span class="in">  df &lt;- dunn_test(emotions, formula(paste0(emotion, "~condition")), p.adjust.method = "BH") %&gt;%</span></span>
+<span id="cb10-307"><a href="#cb10-307" aria-hidden="true" tabindex="-1"></a><span class="in">    mutate(</span></span>
+<span id="cb10-308"><a href="#cb10-308" aria-hidden="true" tabindex="-1"></a><span class="in">      Emotion = emotion,</span></span>
+<span id="cb10-309"><a href="#cb10-309" aria-hidden="true" tabindex="-1"></a><span class="in">      p.adj = round(p.adj, 4),</span></span>
+<span id="cb10-310"><a href="#cb10-310" aria-hidden="true" tabindex="-1"></a><span class="in">      Significant = ifelse(p.adj &lt; 0.05, "Yes", "No")</span></span>
+<span id="cb10-311"><a href="#cb10-311" aria-hidden="true" tabindex="-1"></a><span class="in">    ) %&gt;%</span></span>
+<span id="cb10-312"><a href="#cb10-312" aria-hidden="true" tabindex="-1"></a><span class="in">    select(Emotion, group1, group2, p.adj, p.adj.signif, Significant)</span></span>
+<span id="cb10-313"><a href="#cb10-313" aria-hidden="true" tabindex="-1"></a><span class="in">  return(df)</span></span>
+<span id="cb10-314"><a href="#cb10-314" aria-hidden="true" tabindex="-1"></a><span class="in">})</span></span>
+<span id="cb10-315"><a href="#cb10-315" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-316"><a href="#cb10-316" aria-hidden="true" tabindex="-1"></a><span class="in">dunn_df &lt;- bind_rows(dunn_results)</span></span>
+<span id="cb10-317"><a href="#cb10-317" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-318"><a href="#cb10-318" aria-hidden="true" tabindex="-1"></a><span class="in"># Format with gt</span></span>
+<span id="cb10-319"><a href="#cb10-319" aria-hidden="true" tabindex="-1"></a><span class="in">dunn_df %&gt;%</span></span>
+<span id="cb10-320"><a href="#cb10-320" aria-hidden="true" tabindex="-1"></a><span class="in">  gt() %&gt;%</span></span>
+<span id="cb10-321"><a href="#cb10-321" aria-hidden="true" tabindex="-1"></a><span class="in">  tab_header(</span></span>
+<span id="cb10-322"><a href="#cb10-322" aria-hidden="true" tabindex="-1"></a><span class="in">    title = "Dunn Test (BH-adjusted) for Pairwise Comparisons by Emotion"</span></span>
+<span id="cb10-323"><a href="#cb10-323" aria-hidden="true" tabindex="-1"></a><span class="in">  ) %&gt;%</span></span>
+<span id="cb10-324"><a href="#cb10-324" aria-hidden="true" tabindex="-1"></a><span class="in">  cols_label(</span></span>
+<span id="cb10-325"><a href="#cb10-325" aria-hidden="true" tabindex="-1"></a><span class="in">    group1 = "Group 1",</span></span>
+<span id="cb10-326"><a href="#cb10-326" aria-hidden="true" tabindex="-1"></a><span class="in">    group2 = "Group 2",</span></span>
+<span id="cb10-327"><a href="#cb10-327" aria-hidden="true" tabindex="-1"></a><span class="in">    p.adj = "Adjusted p-value",</span></span>
+<span id="cb10-328"><a href="#cb10-328" aria-hidden="true" tabindex="-1"></a><span class="in">    p.adj.signif = "Significance Code",</span></span>
+<span id="cb10-329"><a href="#cb10-329" aria-hidden="true" tabindex="-1"></a><span class="in">    Significant = "Significant?"</span></span>
+<span id="cb10-330"><a href="#cb10-330" aria-hidden="true" tabindex="-1"></a><span class="in">  ) %&gt;%</span></span>
+<span id="cb10-331"><a href="#cb10-331" aria-hidden="true" tabindex="-1"></a><span class="in">  data_color(</span></span>
+<span id="cb10-332"><a href="#cb10-332" aria-hidden="true" tabindex="-1"></a><span class="in">    columns = c(p.adj),</span></span>
+<span id="cb10-333"><a href="#cb10-333" aria-hidden="true" tabindex="-1"></a><span class="in">    fn = scales::col_bin(c("red", "orange", "green"), bins = c(0, 0.05, 0.1, 1))</span></span>
+<span id="cb10-334"><a href="#cb10-334" aria-hidden="true" tabindex="-1"></a><span class="in">  ) %&gt;%</span></span>
+<span id="cb10-335"><a href="#cb10-335" aria-hidden="true" tabindex="-1"></a><span class="in">  tab_style(</span></span>
+<span id="cb10-336"><a href="#cb10-336" aria-hidden="true" tabindex="-1"></a><span class="in">    style = list(cell_text(weight = "bold")),</span></span>
+<span id="cb10-337"><a href="#cb10-337" aria-hidden="true" tabindex="-1"></a><span class="in">    locations = cells_body(columns = Significant, rows = Significant == "Yes")</span></span>
+<span id="cb10-338"><a href="#cb10-338" aria-hidden="true" tabindex="-1"></a><span class="in">  )</span></span>
+<span id="cb10-339"><a href="#cb10-339" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-340"><a href="#cb10-340" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb10-341"><a href="#cb10-341" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-342"><a href="#cb10-342" aria-hidden="true" tabindex="-1"></a>Apart from surprise and disgust, we can see that all other emotions present a clear-cut difference between negative and positive prompts.</span>
+<span id="cb10-343"><a href="#cb10-343" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-344"><a href="#cb10-344" aria-hidden="true" tabindex="-1"></a><span class="fu"># Experiment 2</span></span>
+<span id="cb10-345"><a href="#cb10-345" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-346"><a href="#cb10-346" aria-hidden="true" tabindex="-1"></a>A second experiment was proposed to find whether semantical or logical inconsistencies were present in the generated texts and were causing this imbalance. To do this, Google's *Gemma3* model was used as an annotator and instructed via a specific prompt to detect the aforementioned inconsistencies in the texts. The results indicate that almost none of the texts rated by the annotator model included inconsistencies with a total of only five texts containing semantical inconsistencies (around 0.8% of all considered instances).</span>
+<span id="cb10-347"><a href="#cb10-347" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-348"><a href="#cb10-348" aria-hidden="true" tabindex="-1"></a>To set up this experiment and try it a few steps need to be carried out:</span>
+<span id="cb10-349"><a href="#cb10-349" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-350"><a href="#cb10-350" aria-hidden="true" tabindex="-1"></a><span class="ss">1.  </span>set up Factgenie by referring to the official documentation available at <span class="ot">&lt;https://github.com/ufal/factgenie&gt;</span></span>
+<span id="cb10-351"><a href="#cb10-351" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-352"><a href="#cb10-352" aria-hidden="true" tabindex="-1"></a><span class="ss">2.  </span>run the <span class="in">`make_jsonl_input.py`</span> and <span class="in">`make_jsonl_output.py`</span> to prepare data for the analysis inside of the self-hosted web app offered by Factgenie</span>
+<span id="cb10-353"><a href="#cb10-353" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-354"><a href="#cb10-354" aria-hidden="true" tabindex="-1"></a><span class="ss">3.  </span>start up the app by running the following in a CLI instance:</span>
+<span id="cb10-355"><a href="#cb10-355" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-356"><a href="#cb10-356" aria-hidden="true" tabindex="-1"></a>    <span class="in">``` bash</span></span>
+<span id="cb10-357"><a href="#cb10-357" aria-hidden="true" tabindex="-1"></a>    <span class="ex">factgenie</span> run <span class="at">--host</span><span class="op">=</span>127.0.0.1 <span class="at">--port</span> 8890</span>
+<span id="cb10-358"><a href="#cb10-358" aria-hidden="true" tabindex="-1"></a>    <span class="in">```</span></span>
+<span id="cb10-359"><a href="#cb10-359" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-360"><a href="#cb10-360" aria-hidden="true" tabindex="-1"></a>    When inside the app we imported the data as instructed in the app setup by separating instances of prompts used to generate the texts from the outputs (i.e., the two <span class="in">`.jsonl`</span> files generated in step 2.</span>
+<span id="cb10-361"><a href="#cb10-361" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-362"><a href="#cb10-362" aria-hidden="true" tabindex="-1"></a>*Gemma3* wrote the annotations and showed that only 5 texts out of 590 showed semantical inconsistencies. The results are available in the <span class="in">`llm-eval-gemini27B.csv`</span> file.</span>
+<span id="cb10-363"><a href="#cb10-363" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-364"><a href="#cb10-364" aria-hidden="true" tabindex="-1"></a><span class="in">```{r, output=FALSE}</span></span>
+<span id="cb10-365"><a href="#cb10-365" aria-hidden="true" tabindex="-1"></a><span class="in"># import dataset with LLM annotations and evaluations</span></span>
+<span id="cb10-366"><a href="#cb10-366" aria-hidden="true" tabindex="-1"></a><span class="in">llm_eval_gemini27B &lt;- read_csv("generated_data/llm-evals/llm-eval-gemini27B.csv")</span></span>
+<span id="cb10-367"><a href="#cb10-367" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb10-368"><a href="#cb10-368" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-369"><a href="#cb10-369" aria-hidden="true" tabindex="-1"></a><span class="in">```{r, echo=TRUE}</span></span>
+<span id="cb10-370"><a href="#cb10-370" aria-hidden="true" tabindex="-1"></a><span class="in">ggplot(llm_eval_gemini27B, aes(x = Category, y = Count, fill = Category)) +</span></span>
+<span id="cb10-371"><a href="#cb10-371" aria-hidden="true" tabindex="-1"></a><span class="in">  geom_col() +</span></span>
+<span id="cb10-372"><a href="#cb10-372" aria-hidden="true" tabindex="-1"></a><span class="in">  labs(title = "Number of Inconsistencies Found (out of 590 rated texts)") +</span></span>
+<span id="cb10-373"><a href="#cb10-373" aria-hidden="true" tabindex="-1"></a><span class="in">  theme(plot.title = element_text(hjust = 0.5),</span></span>
+<span id="cb10-374"><a href="#cb10-374" aria-hidden="true" tabindex="-1"></a><span class="in">        axis.text.x = element_blank(),</span></span>
+<span id="cb10-375"><a href="#cb10-375" aria-hidden="true" tabindex="-1"></a><span class="in">        axis.title.x = element_blank())</span></span>
+<span id="cb10-376"><a href="#cb10-376" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 </code><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></pre></div>
 </div></div></div></div></div>
 </div> <!-- /content -->

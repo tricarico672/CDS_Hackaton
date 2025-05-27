@@ -317,8 +317,57 @@ radarchart(as.data.frame(radar_data_scaled),
            calcex = 0.8,
            cglwd = 0.8,
            maxmin = TRUE)
+legend("topleft", legend = rownames(radar_data_scaled)[3:nrow(radar_data_scaled)],
+       col = c("blue", "red"), lty = 1, lwd = 2)
 # dev.off()
 
+# Step 1: Convert to long format
+emotions_long <- emotions %>%
+  pivot_longer(cols = c(joy, sadness, anger, fear, trust, anticipation, disgust, surprise),
+               names_to = "emotion",
+               values_to = "z_score")
 
-legend("topright", legend = rownames(radar_data_scaled)[3:nrow(radar_data_scaled)],
-       col = c("blue", "red"), lty = 1, lwd = 2)
+# Step 2: Aggregate (e.g., compute the mean z-score per group)
+emotion_summary <- emotions_long %>%
+  group_by(type_of_prompt, temperature, emotion) %>%
+  summarise(mean_z = mean(z_score, na.rm = TRUE), .groups = 'drop')
+
+# Step 3: Plot heatmap
+ggplot(emotion_summary, aes(x = factor(temperature), y = emotion, fill = mean_z)) +
+  geom_tile(color = "white") +
+  facet_wrap(~type_of_prompt) +
+  scale_fill_gradient2(low = "blue", mid = "white", high = "red", midpoint = 0,
+                       name = "Mean Z-Score") +
+  labs(x = "Temperature", y = "Emotion",
+       title = "Emotion Heatmap by Prompt Type and Temperature") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.title = element_text(hjust = 0.5),
+        axis.text.y = element_text(face = "bold"),
+        axis.title.y = element_blank(),
+        legend.position = "bottom")
+
+heatmp <- ggplot(emotion_summary, aes(x = factor(temperature), y = fct_rev(emotion), fill = mean_z)) +
+  geom_tile(color = "white", linewidth = 0.5) +
+  geom_text(aes(label = round(mean_z, 1)), size = 3, color = "black") +  # optional, shows value
+  facet_wrap(~type_of_prompt, nrow = 1, strip.position = "top") +
+  scale_fill_gradient2(
+    low = "#4A90E2", mid = "#F5F5F5", high = "#D0021B", midpoint = 0,
+    name = "Mean Z-Score"
+  ) +
+  labs(
+    x = "Temperature", y = NULL,
+    title = "Emotion Heatmap by Prompt Type and Temperature"
+  ) +
+  theme_minimal(base_size = 12, base_family = "Helvetica") +
+  theme(
+    strip.background = element_blank(),
+    strip.text = element_text(face = "bold", size = 12),
+    axis.text.x = element_text(angle = 45, hjust = 1, face = "bold"),
+    axis.text.y = element_text(face = "bold", size = 10),
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 12),
+    legend.position = "bottom",
+    legend.title = element_text(face = "bold", size = 10),
+    panel.grid = element_blank()
+  )
+heatmp
+ggsave("images/heatmap.png", plot = heatmp, width = 1500, height = 1500, units = "px")

@@ -20,7 +20,64 @@ This additional portion of the report goes through the technical steps and setup
 
 # Generating data
 
-Data for this experiment was produced in two steps. During the first iteration, carried out calling the API remotely, we asked the API to produce the entire sample of data (around 600 texts, 200 for each temperature level selected). However, we noticed that most of the texts produced with the highest temperature (1.3) were not usable and after cleaning them (in Python using the `clean_data.py` script) we had to rebalance the groups and adjust for the dropped texts from the highest temperature group. To this end, the second iteration of the text generation happened. This time, however, the same Mistral model was run locally using the framework provided by `ollama` and exploiting the connection to the locally hosted API. The texts produced in this fashion passed all cleaning tests and were included in the final dataset by running the `clean_data.py` script and saving the final merged dataset in `.csv` format. The last step was to compute $z$-scores for each emotion embedded in the generated texts using the `create_emotions.py` script. The final dataset (`emotions.csv)` was then saved and was used for the subsequent analyses. After performing this step, no more data cleaning was needed.
+Data for this experiment was produced in two steps. During the first iteration, carried out calling the API remotely, we asked the API to produce the entire sample of data (around 600 texts, 200 for each temperature level selected). However, we noticed that most of the texts produced with the highest temperature (1.3) were not usable and after cleaning them (in Python using the `clean_data.py` script) we had to rebalance the groups and adjust for the dropped texts from the highest temperature group.
+
+``` python
+#! clean_data.py
+
+# function used to clean the data
+def clean_df(df: pd.DataFrame) -> pd.DataFrame:
+
+    # make text lowercase
+    df['text_lower'] = df['text'].str.lower()
+
+    # drop if text is shorter than 500 characters
+    min_length = df['text_lower'].str.len() >= 500
+    
+    # check if text starts with parenthesis
+    parenthesis = df['text_lower'].str.startswith('(')
+    
+    # check if non ascii letters are used
+    non_ascii_mask = df['text'].apply(lambda x: not all(ord(char) < 128 for char in str(x)))
+
+    df_cleaned = df[(~parenthesis) & (~non_ascii_mask) & (min_length)]
+
+    return df_cleaned
+```
+
+To this end, the second iteration of the text generation happened. This time, however, the same Mistral model was run locally using the framework provided by `ollama` and exploiting the connection to the locally hosted API. The texts produced in this fashion passed all cleaning tests and were included in the final dataset by running the `clean_data.py` script and saving the final merged dataset in `.csv` format. The last step was to compute $z$-scores for each emotion embedded in the generated texts using the `create_emotions_df.py` script. The final dataset (`emotions.csv)` was then saved and was used for the subsequent analyses. After performing this step, no more data cleaning was needed.
+
+``` python
+from emoatlas import EmoScores
+import pandas as pd
+
+# compute emotion scores
+def compute_scores(df: pd.DataFrame, n = -1):
+    emos = EmoScores()
+    
+    # initialize empty dictionary to store the scores
+    dct = {
+      'anger' : list(),
+      'trust' : list(),
+      'surprise' : list(), 
+      'disgust' : list(),
+      'joy' : list(),
+      'sadness' : list(),
+      'fear' : list(),
+      'anticipation' : list()
+    }
+
+    # compute score for each text in the df
+    for i in range(len(df)):
+        text = df['text'].iloc[i]
+        # compute emotional scores using EmoAtlas
+        scores = emos.zscores(text)
+        # append to each emotion the score for the current text
+        for k in scores:
+            dct[k].append(scores[k])
+
+    return dct
+```
 
 # Experiment 1 - Statistical Analysis
 
@@ -34,7 +91,7 @@ theme_set(theme_minimal())
 
 Data was then imported:
 
-```{r,echo=FALSE}
+```{r, echo=TRUE, output = FALSE}
 emotions <- read_csv("generated_data/cleaned/emotions.csv")
 # remove first two columns, keep all others
 emotions <- emotions[, 3:length(emotions)]
@@ -48,6 +105,7 @@ The first step in preparing this analysis is to declare the groups and specify t
 # cleans the names in the dataset, removing whitespaces from the column name
 emotions <- clean_names(emotions)
 
+# creates a condition and initializes it as a factor
 emotions <- emotions %>% 
   mutate(condition = paste(substr(type_of_prompt, 1, 1), temperature, sep = '+'),
          condition = as.factor(condition),
@@ -164,7 +222,7 @@ shapiro_df %>%
   )
 ```
 
-As it is possible to observe these departures from the assumptions, make it necessary to use non-parametric alternatives to the ANOVA test.
+As it is possible to observe these departures from the assumptions it becomes necessary to use non-parametric alternatives to the ANOVA test.
 
 ## Kruskal-Wallis Test
 
@@ -301,14 +359,15 @@ To set up this experiment and try it a few steps need to be carried out:
 
 *Gemma3* wrote the annotations and showed that only 5 texts out of 590 showed semantical inconsistencies. The results are available in the `llm-eval-gemini27B.csv` file.
 
-```{r, results='hide'}
+```{r, output=FALSE}
+# import dataset with LLM annotations and evaluations
 llm_eval_gemini27B <- read_csv("generated_data/llm-evals/llm-eval-gemini27B.csv")
 ```
 
-```{r, echo=FALSE}
+```{r, echo=TRUE}
 ggplot(llm_eval_gemini27B, aes(x = Category, y = Count, fill = Category)) +
   geom_col() +
-  labs(title = "# of Inconsistencies Found (out of 590 rated texts)") +
+  labs(title = "Number of Inconsistencies Found (out of 590 rated texts)") +
   theme(plot.title = element_text(hjust = 0.5),
         axis.text.x = element_blank(),
         axis.title.x = element_blank())
