@@ -1,6 +1,6 @@
 # General Information
 
-This is the repository for the Cognitive Data Science Hackaton. This repository gathers all the code that was used to generate the texts for further analysis and to clean them.
+This is the repository for the Cognitive Data Science Hackaton. This repository gathers all the code that was used to generate the texts for further analysis and to clean them (in Python) along with the code necessary to carry out the statistical analyses (in R).
 
 # Prompts
 
